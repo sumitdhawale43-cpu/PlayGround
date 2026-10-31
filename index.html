@@ -1,0 +1,222 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1, user-scalable=no" />
+<meta name="theme-color" content="#0b100e" />
+<meta name="description" content="Hollowmoor — an open-world survival tale where the valley remembers everything you do." />
+<title>Hollowmoor — The Valley Remembers</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%230b100e'/%3E%3Cpath d='M18 46V18h6v11h16V18h6v28h-6V35H24v11z' fill='%23e0763c'/%3E%3C/svg%3E" />
+<link rel="stylesheet" href="./styles.css" />
+</head>
+<body>
+<div id="app">
+  <canvas id="game" aria-label="Hollowmoor game world"></canvas>
+
+  <!-- ===================== HUD ===================== -->
+  <div id="hud" class="hidden">
+    <header class="hud-top">
+      <div class="brand">
+        <span class="brand-mark">H</span>
+        <div class="brand-text">
+          <span class="brand-name">HOLLOWMOOR</span>
+          <span id="cycleLabel" class="brand-cycle">CYCLE I</span>
+        </div>
+      </div>
+
+      <div class="objective" id="objective">
+        <span class="obj-eyebrow">THE WAY OUT</span>
+        <div class="obj-row">
+          <span id="objText">Light the three cairns</span>
+          <span id="objPips" class="pips"><i></i><i></i><i></i></span>
+        </div>
+      </div>
+
+      <div class="clockbox">
+        <span id="phase" class="phase">DAWN</span>
+        <span id="clock" class="clock">DAY 1 · 07:20</span>
+      </div>
+    </header>
+
+    <div class="vitals" id="vitals">
+      <div class="vital">
+        <span class="vital-label">VIGOR</span>
+        <div class="bar"><i id="barHealth" class="fill health"></i></div>
+      </div>
+      <div class="vital">
+        <span class="vital-label">STAMINA</span>
+        <div class="bar"><i id="barStamina" class="fill stamina"></i></div>
+      </div>
+      <div class="vital">
+        <span class="vital-label">HUNGER</span>
+        <div class="bar"><i id="barHunger" class="fill hunger"></i></div>
+      </div>
+      <div class="vital">
+        <span class="vital-label">WARMTH</span>
+        <div class="bar"><i id="barWarmth" class="fill warmth"></i></div>
+      </div>
+    </div>
+
+    <div class="minimap-wrap" id="minimapWrap">
+      <canvas id="minimap" width="184" height="136"></canvas>
+      <span class="minimap-label">HOLLOWMOOR VALLEY</span>
+    </div>
+
+    <div class="learned" id="learned">
+      <span class="learned-title">THE VALLEY LEARNS</span>
+      <div id="learnedList" class="learned-list">
+        <p class="learned-empty">It is still deciding what you are.</p>
+      </div>
+    </div>
+
+    <div class="resources" id="resources"></div>
+
+    <div class="hotbar" id="hotbar"></div>
+
+    <div class="prompt hidden" id="prompt"><kbd>E</kbd><span id="promptText">Interact</span></div>
+
+    <div class="side-actions">
+      <button id="ledgerBtn" class="ghost-btn" aria-label="Open the ledger">Ledger <kbd>TAB</kbd></button>
+      <button id="craftBtn" class="ghost-btn" aria-label="Open crafting">Craft <kbd>C</kbd></button>
+    </div>
+
+    <div class="controls-hint" id="controlsHint">
+      <span><b>WASD</b> move</span><span><b>Mouse</b> aim</span><span><b>Click</b> strike</span><span><b>E</b> interact</span><span><b>F</b> ember</span><span><b>Q</b> snare</span><span><b>Space</b> dodge</span>
+    </div>
+
+    <div class="tool-chip hidden" id="toolChip"><span id="toolChipName">Axe</span></div>
+
+    <div id="toasts" class="toasts"></div>
+  </div>
+
+  <!-- ===================== TITLE ===================== -->
+  <div id="title" class="screen title-screen">
+    <div class="title-vignette"></div>
+    <div class="title-inner">
+      <p class="eyebrow">A SURVIVAL TALE THAT KEEPS A LEDGER</p>
+      <h1>HOLLOWMOOR</h1>
+      <div class="title-rule"><i></i><span>✦</span><i></i></div>
+      <p class="tagline">The valley forgets nothing.<br />Not the fires. Not the bodies. Not you.</p>
+
+      <button id="playBtn" class="play-btn" type="button">
+        <span>Play</span>
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h13M13 6l6 6-6 6" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </button>
+
+      <p class="title-hint"><span class="hint-desktop">WASD to move · mouse to aim · <b>E</b> to touch the world</span><span class="hint-touch">Drag to move · tap to strike · <b>USE</b> to touch the world</span></p>
+      <p id="titleCycle" class="title-cycle">CYCLE I · THE VALLEY IS NEW TO YOU</p>
+    </div>
+    <div class="title-foot">
+      <span>FIELD NOTES</span>
+      <span>EVERY DEED IS WRITTEN DOWN</span>
+      <span>SURVIVE THE NIGHTS</span>
+    </div>
+  </div>
+
+  <!-- ===================== LEDGER ===================== -->
+  <div id="ledger" class="screen panel-screen hidden" role="dialog" aria-modal="true" aria-labelledby="ledgerTitle">
+    <div class="ledger-panel">
+      <header class="panel-head">
+        <div>
+          <p class="eyebrow">WHAT THE LAND HAS WRITTEN DOWN</p>
+          <h2 id="ledgerTitle">The Ledger</h2>
+        </div>
+        <button class="close-btn" id="ledgerClose" aria-label="Close ledger">ESC</button>
+      </header>
+      <div class="ledger-grid">
+        <section class="ledger-left">
+          <div class="panel-subhead">
+            <span>YOUR DEEDS</span>
+            <span id="ledgerCount" class="muted">0 entries</span>
+          </div>
+          <div id="ledgerEvents" class="ledger-events"></div>
+        </section>
+        <section class="ledger-right">
+          <div class="panel-subhead"><span>WHAT THEY LEARNED</span><span id="adaptCount" class="muted">0 / 7</span></div>
+          <div id="adaptList" class="adapt-list"></div>
+          <div class="panel-subhead trait-subhead"><span>HOW YOU ARE READ</span></div>
+          <div id="traitList" class="trait-list"></div>
+        </section>
+      </div>
+      <footer class="panel-foot">
+        <span>The Hollowed remember your habits. They hunt the shape of you.</span>
+        <span class="muted">Press TAB to close</span>
+      </footer>
+    </div>
+  </div>
+
+  <!-- ===================== CRAFT ===================== -->
+  <div id="craft" class="screen panel-screen hidden" role="dialog" aria-modal="true" aria-labelledby="craftTitle">
+    <div class="craft-panel">
+      <header class="panel-head">
+        <div>
+          <p class="eyebrow">SURVIVE THE NIGHT</p>
+          <h2 id="craftTitle">Make &amp; Mend</h2>
+        </div>
+        <button class="close-btn" id="craftClose" aria-label="Close crafting">ESC</button>
+      </header>
+      <div id="recipeList" class="recipe-list"></div>
+      <footer class="panel-foot">
+        <span>Gather with <b>E</b>. Strike trees and stone with your axe.</span>
+        <span class="muted">Press C to close</span>
+      </footer>
+    </div>
+  </div>
+
+  <!-- ===================== DIALOGUE ===================== -->
+  <div id="dialogue" class="dialogue hidden" role="dialog" aria-live="polite">
+    <div class="portrait" id="dialoguePortrait"></div>
+    <div class="dialogue-body">
+      <div class="dialogue-head">
+        <span id="dialogueName">Maren</span>
+        <span id="dialogueRole" class="muted">Hearthkeeper</span>
+      </div>
+      <p id="dialogueText"></p>
+      <div class="dialogue-foot">
+        <span class="dialogue-tag" id="dialogueTag"></span>
+        <button id="dialogueNext" class="small-btn">Close <kbd>E</kbd></button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===================== DEATH ===================== -->
+  <div id="death" class="screen death-screen hidden">
+    <div class="death-inner">
+      <p class="eyebrow">THE VALLEY WAS WATCHING</p>
+      <h2>You are remembered.</h2>
+      <p id="deathText" class="death-text">They found where you fell. Tomorrow, they will wait there.</p>
+      <button id="riseBtn" class="play-btn small" type="button"><span>Rise at the hearth</span></button>
+    </div>
+  </div>
+
+  <!-- ===================== ENDING ===================== -->
+  <div id="ending" class="screen ending-screen hidden">
+    <div class="ending-inner">
+      <p class="eyebrow">THE THREE FIRES ARE LIT</p>
+      <h2>The way opens.</h2>
+      <p class="tagline">You leave Hollowmoor. The valley keeps your shape.</p>
+      <div id="endingStats" class="ending-stats"></div>
+      <button id="againBtn" class="play-btn small" type="button"><span>Walk in again</span></button>
+      <p class="ending-note">A new cycle begins. Everything you taught them remains.</p>
+    </div>
+  </div>
+
+  <!-- ===================== TOUCH ===================== -->
+  <div id="touch" class="hidden">
+    <div id="stick" class="stick"><i id="stickKnob"></i></div>
+    <div class="touch-actions">
+      <button id="btnEmber" class="tbtn small" aria-label="Ember flash">EMBER</button>
+      <button id="btnTrap" class="tbtn small" aria-label="Place snare">SNARE</button>
+      <button id="btnTool" class="tbtn small" aria-label="Switch tool">AXE</button>
+      <button id="btnDodge" class="tbtn mid" aria-label="Dodge">DODGE</button>
+      <button id="btnInteract" class="tbtn mid" aria-label="Interact">USE</button>
+      <button id="btnAttack" class="tbtn big" aria-label="Strike">STRIKE</button>
+    </div>
+  </div>
+
+  <div id="cursor" class="cursor"></div>
+</div>
+
+<script type="module" src="./js/main.js"></script>
+</body>
+</html>
