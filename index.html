@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+<meta name="theme-color" content="#060b16" />
+<meta name="description" content="Portal Runner — a hand-crafted dimension-shifting platform adventure across five worlds." />
+<title>PORTAL RUNNER — Dimension Adventure</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cdefs%3E%3CradialGradient id='g'%3E%3Cstop offset='0' stop-color='%23fff'/%3E%3Cstop offset='.55' stop-color='%236ff5d0'/%3E%3Cstop offset='1' stop-color='%23ff6fd8'/%3E%3C/radialGradient%3E%3C/defs%3E%3Crect width='64' height='64' rx='14' fill='%23070d18'/%3E%3Cellipse cx='32' cy='32' rx='12' ry='19' fill='none' stroke='url(%23g)' stroke-width='5'/%3E%3Cellipse cx='32' cy='32' rx='4' ry='11' fill='%236ff5d0'/%3E%3C/svg%3E" />
+<link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+<div id="app">
+  <canvas id="game" aria-label="Portal Runner game canvas"></canvas>
+
+  <!-- ============ HUD ============ -->
+  <div id="hud" class="hidden" aria-live="polite">
+    <div class="hud-top">
+      <div class="hud-level">
+        <div class="hud-index" id="hud-index">01</div>
+        <div class="hud-level-text">
+          <div class="hud-name" id="hud-name">Awakening</div>
+          <div class="hud-sub" id="hud-sub">Lumen Grove</div>
+        </div>
+      </div>
+
+      <div class="hud-stats">
+        <div class="stat shard"><span class="shard-ico" aria-hidden="true"></span><span id="hud-shards">0/18</span></div>
+        <div class="stat key"><span class="key-ico" aria-hidden="true"></span><span id="hud-keys">0/3</span></div>
+        <div class="stat timer" id="hud-timer">0:00.0</div>
+      </div>
+
+      <div class="hud-actions">
+        <button class="icon-btn" id="btn-sound" title="Toggle sound (M)" aria-label="Toggle sound">
+          <svg viewBox="0 0 24 24" class="ico-on"><path d="M4 9h4l5-4v14l-5-4H4z"/><path d="M16 8.5a5 5 0 0 1 0 7M18.8 6a8.5 8.5 0 0 1 0 12" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+          <svg viewBox="0 0 24 24" class="ico-off"><path d="M4 9h4l5-4v14l-5-4H4z"/><path d="M16.5 9.5l5 5m0-5l-5 5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+        </button>
+        <button class="icon-btn" id="btn-pause" title="Pause (Esc)" aria-label="Pause">
+          <svg viewBox="0 0 24 24"><rect x="6" y="5" width="4" height="14" rx="1.5"/><rect x="14" y="5" width="4" height="14" rx="1.5"/></svg>
+        </button>
+      </div>
+    </div>
+
+    <div class="dim-badge" id="dim-badge">
+      <span class="dim-orb"></span>
+      <span class="dim-copy"><small>DIMENSION</small><b id="dim-name">LUMEN</b></span>
+    </div>
+
+    <div class="dash-meter" id="dash-meter" title="Dash charge">
+      <svg viewBox="0 0 44 44" aria-hidden="true">
+        <circle class="dash-track" cx="22" cy="22" r="18"/>
+        <circle class="dash-arc" id="dash-arc" cx="22" cy="22" r="18"/>
+      </svg>
+      <span class="dash-key">⇧</span>
+    </div>
+
+    <div class="portal-prompt hidden" id="portal-prompt">
+      <span class="prompt-ring"></span>
+      <kbd>E</kbd>
+      <span class="prompt-text">PHASE</span>
+    </div>
+
+    <div class="toast" id="toast"></div>
+    <div class="level-banner" id="level-banner">
+      <div class="banner-index" id="banner-index">LEVEL 01</div>
+      <div class="banner-title" id="banner-title">Awakening</div>
+      <div class="banner-sub" id="banner-sub">Lumen Grove · Violet Hollow</div>
+    </div>
+    <div class="death-vignette" id="death-vignette"></div>
+  </div>
+
+  <!-- ============ TOUCH CONTROLS ============ -->
+  <div id="touch-controls" class="hidden">
+    <div class="stick-zone" id="stick-zone">
+      <div class="stick-base" id="stick-base">
+        <div class="stick-knob" id="stick-knob"></div>
+      </div>
+    </div>
+    <div class="touch-buttons">
+      <button id="touch-phase" class="tbtn phase" aria-label="Phase through portal"><span>PHASE</span></button>
+      <button id="touch-dash" class="tbtn dash" aria-label="Dash"><span>DASH</span></button>
+      <button id="touch-jump" class="tbtn jump" aria-label="Jump"><span>JUMP</span></button>
+    </div>
+  </div>
+
+  <!-- ============ SCREENS ============ -->
+  <div id="screens">
+
+    <!-- TITLE -->
+    <section class="screen title-screen active" id="screen-title">
+      <div class="title-shade"></div>
+      <div class="title-inner">
+        <div class="eyebrow reveal d1"><span></span>A DIMENSION-SHIFTING ADVENTURE<span></span></div>
+        <h1 class="logo reveal d2">
+          <span class="logo-portal">PORTAL</span>
+          <span class="logo-runner">RUNNER</span>
+          <span class="logo-glow" aria-hidden="true">PORTAL RUNNER</span>
+        </h1>
+        <p class="tagline reveal d3">Two worlds. One path. <em>Shift the rift.</em></p>
+        <div class="menu-buttons reveal d4">
+          <button class="btn btn-hero" data-action="play" id="btn-play">
+            <span class="btn-glyph">▶</span><span class="btn-text"><b>PLAY</b><small id="play-sub">BEGIN THE JOURNEY</small></span>
+          </button>
+          <button class="btn btn-ghost" data-action="levels"><span class="btn-glyph">◈</span><span class="btn-text"><b>LEVEL SELECT</b><small>FIVE RIFTS</small></span></button>
+          <button class="btn btn-ghost" data-action="help"><span class="btn-glyph">?</span><span class="btn-text"><b>HOW TO PLAY</b><small>MOVES &amp; MECHANICS</small></span></button>
+          <button class="btn btn-ghost" data-action="settings"><span class="btn-glyph">⚙</span><span class="btn-text"><b>SETTINGS</b><small>AUDIO &amp; DISPLAY</small></span></button>
+        </div>
+        <div class="title-progress reveal d5" id="title-progress"></div>
+      </div>
+      <div class="title-foot reveal d5">
+        <span><i class="key-dot">←</i><i class="key-dot">→</i> MOVE</span>
+        <span><i class="key-dot wide">SPACE</i> JUMP</span>
+        <span><i class="key-dot wide">SHIFT</i> DASH</span>
+        <span><i class="key-dot">E</i> PHASE</span>
+        <span class="foot-mute"><i class="key-dot">M</i> SOUND</span>
+      </div>
+    </section>
+
+    <!-- LEVEL SELECT -->
+    <section class="screen" id="screen-levels">
+      <div class="panel-page">
+        <header class="page-head">
+          <button class="round-btn" data-action="back-title" aria-label="Back">←</button>
+          <div>
+            <div class="eyebrow small"><span></span>THE RIFT ATLAS<span></span></div>
+            <h2>Choose a <em>Rift</em></h2>
+          </div>
+          <div class="progress-chip" id="atlas-progress">0 / 15 RELICS</div>
+        </header>
+        <div class="level-grid" id="level-grid"></div>
+        <div class="atlas-foot">
+          <span>Collect <b class="shard-word">shards</b> and hidden <b class="key-word">relic keys</b> to earn stars.</span>
+          <button class="btn btn-small btn-ghost" data-action="play">CONTINUE →</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- HELP -->
+    <section class="screen" id="screen-help">
+      <div class="panel-page narrow">
+        <header class="page-head">
+          <button class="round-btn" data-action="back-title" aria-label="Back">←</button>
+          <div>
+            <div class="eyebrow small"><span></span>FIELD MANUAL<span></span></div>
+            <h2>How to <em>Play</em></h2>
+          </div>
+          <div class="progress-chip">SURVIVE THE RIFT</div>
+        </header>
+        <div class="help-grid">
+          <div class="help-card">
+            <h3><span class="num">01</span> Move &amp; Jump</h3>
+            <div class="keys-row"><kbd>A</kbd><kbd>D</kbd><span>/</span><kbd>←</kbd><kbd>→</kbd><span>move</span></div>
+            <div class="keys-row"><kbd>SPACE</kbd><kbd>W</kbd><span>jump · double jump</span></div>
+            <p>Release jump early for a shorter hop. Land on ledges to refill your double jump.</p>
+          </div>
+          <div class="help-card">
+            <h3><span class="num">02</span> Dash</h3>
+            <div class="keys-row"><kbd>SHIFT</kbd><kbd>X</kbd><span>dash</span></div>
+            <p>Cut through the air and shatter watchers. One dash per airtime — it recharges on the ground.</p>
+          </div>
+          <div class="help-card accent">
+            <h3><span class="num">03</span> Phase</h3>
+            <div class="keys-row"><kbd>E</kbd><kbd>F</kbd><span>phase</span></div>
+            <p>Stand inside a portal and press Phase to cross dimensions. Portals may carry you somewhere far. Look for ghost platforms — they only exist on the other side.</p>
+          </div>
+          <div class="help-card">
+            <h3><span class="num">04</span> The Two Worlds</h3>
+            <p><b class="light-word">Lumen</b> is bright and weighty. <b class="dark-word">Umbra</b> is dark and floaty, with lower gravity — but its lava bites. Platforms, hazards, enemies and paths differ between worlds.</p>
+          </div>
+          <div class="help-card">
+            <h3><span class="num">05</span> Secrets</h3>
+            <p>Three <b class="key-word">relic keys</b> are hidden in every rift, and some shards sit behind secret portals. Stars are earned by completing a rift, collecting shards, and finding every key.</p>
+          </div>
+          <div class="help-card">
+            <h3><span class="num">06</span> Checkpoints</h3>
+            <p>Touch a beacon to set your return point. Falling or touching a hazard sends you back — your collected shards stay with you.</p>
+          </div>
+        </div>
+        <div class="atlas-foot">
+          <span>Mobile: use the on-screen stick, then <b>JUMP</b>, <b>DASH</b> and <b>PHASE</b>.</span>
+          <button class="btn btn-small btn-ghost" data-action="back-title">GOT IT</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- SETTINGS -->
+    <section class="screen" id="screen-settings">
+      <div class="panel-page narrow">
+        <header class="page-head">
+          <button class="round-btn" data-action="back-title" aria-label="Back">←</button>
+          <div>
+            <div class="eyebrow small"><span></span>SYSTEM<span></span></div>
+            <h2>Settings</h2>
+          </div>
+          <div class="progress-chip" id="settings-progress">0% COMPLETE</div>
+        </header>
+        <div class="settings-list">
+          <label class="setting-row">
+            <span><b>Music</b><small>Generative ambient score</small></span>
+            <input type="checkbox" id="set-music" class="switch" /><i></i>
+          </label>
+          <label class="setting-row">
+            <span><b>Sound effects</b><small>Jumps, portals, pickups</small></span>
+            <input type="checkbox" id="set-sfx" class="switch" /><i></i>
+          </label>
+          <label class="setting-row">
+            <span><b>Reduce motion</b><small>Calmer camera and effects</small></span>
+            <input type="checkbox" id="set-motion" class="switch" /><i></i>
+          </label>
+          <label class="setting-row">
+            <span><b>Touch controls</b><small>Always show on-screen buttons</small></span>
+            <input type="checkbox" id="set-touch" class="switch" /><i></i>
+          </label>
+          <label class="setting-row">
+            <span><b>Screen shake</b><small>Impacts and portals</small></span>
+            <input type="checkbox" id="set-shake" class="switch" /><i></i>
+          </label>
+        </div>
+        <div class="danger-zone">
+          <div><b>Reset all progress</b><small>Erase every star, shard and unlocked rift.</small></div>
+          <button class="btn btn-small btn-danger" id="btn-reset">RESET</button>
+        </div>
+        <div class="atlas-foot">
+          <span>Progress saves automatically in this browser.</span>
+          <button class="btn btn-small btn-ghost" data-action="back-title">BACK</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- PAUSE -->
+    <section class="screen overlay-screen" id="screen-pause">
+      <div class="dialog">
+        <div class="dialog-orb"></div>
+        <div class="eyebrow small"><span></span>RIFT SUSPENDED<span></span></div>
+        <h2>Paused</h2>
+        <div class="dialog-stats" id="pause-stats">SHARDS 0/18 · KEYS 0/3</div>
+        <div class="dialog-buttons">
+          <button class="btn btn-hero compact" data-action="resume"><span class="btn-glyph">▶</span><span class="btn-text"><b>RESUME</b><small>BACK TO THE RUN</small></span></button>
+          <div class="dialog-row">
+            <button class="btn btn-ghost compact" data-action="restart"><span class="btn-text"><b>RESTART</b><small>THIS RIFT</small></span></button>
+            <button class="btn btn-ghost compact" data-action="exit-level"><span class="btn-text"><b>LEVEL SELECT</b><small>LEAVE RUN</small></span></button>
+          </div>
+          <button class="btn btn-ghost compact" data-action="settings"><span class="btn-text"><b>SETTINGS</b><small>AUDIO &amp; DISPLAY</small></span></button>
+        </div>
+        <div class="dialog-hint"><kbd>ESC</kbd> resume · <kbd>R</kbd> restart</div>
+      </div>
+    </section>
+
+    <!-- COMPLETE -->
+    <section class="screen overlay-screen" id="screen-complete">
+      <div class="dialog complete-dialog">
+        <div class="complete-rays" aria-hidden="true"></div>
+        <div class="eyebrow small"><span></span><span id="complete-eyebrow">RIFT STABILIZED</span><span></span></div>
+        <h2 id="complete-title">Rift Cleared</h2>
+        <div class="star-row" id="complete-stars">
+          <span class="big-star">★</span><span class="big-star">★</span><span class="big-star">★</span>
+        </div>
+        <div class="complete-stats" id="complete-stats"></div>
+        <div class="dialog-buttons">
+          <button class="btn btn-hero compact" data-action="next-level" id="btn-next"><span class="btn-glyph">▶</span><span class="btn-text"><b>NEXT RIFT</b><small>KEEP SHIFTING</small></span></button>
+          <div class="dialog-row">
+            <button class="btn btn-ghost compact" data-action="retry"><span class="btn-text"><b>REPLAY</b><small>IMPROVE SCORE</small></span></button>
+            <button class="btn btn-ghost compact" data-action="exit-level"><span class="btn-text"><b>LEVEL SELECT</b><small>THE ATLAS</small></span></button>
+          </div>
+        </div>
+        <div class="dialog-hint" id="complete-hint">Press <kbd>ENTER</kbd> to continue</div>
+      </div>
+    </section>
+  </div>
+
+  <!-- Screen transition curtain -->
+  <div id="curtain"><div class="curtain-ring"></div></div>
+  <div id="flash"></div>
+  <div id="vignette"></div>
+  <div id="rotate-hint"><div class="rotate-phone">▭</div><span>Rotate for a wider view</span></div>
+</div>
+
+<script type="module" src="js/main.js"></script>
+</body>
+</html>
