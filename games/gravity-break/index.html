@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>GRAVITY BREAK</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect x='6' y='12' width='20' height='16' rx='4' fill='%2300e5ff'/><path d='M10 14 L16 4 L22 14 Z' fill='%23ff2d78'/></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Rajdhani:wght@500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<div id="app">
+  <div id="stage">
+    <canvas id="game" width="1024" height="544"></canvas>
+
+    <!-- HUD -->
+    <div id="hud" class="hidden">
+      <div id="hud-left"><span id="hud-level">LEVEL 1</span><span id="hud-name">FIRST CONTACT</span></div>
+      <div id="hud-mid"><span class="shard-icon">◆</span><span id="hud-shards">0/0</span></div>
+      <div id="hud-right"><span id="hud-time">0:00.0</span><span id="hud-deaths" title="deaths">☠ 0</span></div>
+    </div>
+    <button id="btn-pause" class="icon-btn hidden" aria-label="Pause">❚❚</button>
+    <div id="level-banner" class="hidden"></div>
+    <div id="flip-flash"></div>
+
+    <!-- Touch controls -->
+    <div id="touch" class="hidden">
+      <div class="tc-left">
+        <button class="tc-btn" id="tc-left" aria-label="Left">◀</button>
+        <button class="tc-btn" id="tc-right" aria-label="Right">▶</button>
+      </div>
+      <div class="tc-right">
+        <button class="tc-btn tc-flip" id="tc-flip" aria-label="Flip gravity">⇵</button>
+        <button class="tc-btn tc-jump" id="tc-jump" aria-label="Jump">▲</button>
+      </div>
+    </div>
+
+    <!-- ===== Overlays ===== -->
+    <div id="overlay" class="hidden"></div>
+
+    <section id="screen-title" class="screen hidden">
+      <h1 class="glitch" data-text="GRAVITY BREAK">GRAVITY BREAK</h1>
+      <p class="tagline">REVERSE THE FIELD · REACH THE GATE</p>
+      <div class="menu-col">
+        <button class="btn btn-primary" id="btn-start">START GAME</button>
+        <button class="btn" id="btn-levels">LEVEL SELECT</button>
+        <button class="btn btn-small" id="btn-howto">HOW TO PLAY</button>
+        <button class="btn btn-small" id="btn-sound">SOUND: ON</button>
+      </div>
+      <p class="footer-hint">© GRAVITY BREAK — a neon anti-gravity platformer</p>
+    </section>
+
+    <section id="screen-howto" class="screen hidden">
+      <h2>HOW TO PLAY</h2>
+      <div class="howto-grid">
+        <div><span class="key">A / D</span> or <span class="key">◀ ▶</span><em>Run</em></div>
+        <div><span class="key">W / ↑ / SPACE</span><em>Jump</em></div>
+        <div><span class="key">SHIFT / X / K</span><em>Flip gravity</em></div>
+        <div><span class="key">ESC / P</span><em>Pause</em></div>
+        <div><span class="key">R</span><em>Restart level</em></div>
+        <div><span class="key">M</span><em>Toggle sound</em></div>
+      </div>
+      <p class="howto-tips">◆ Collect energy shards &nbsp;·&nbsp; ⌂ Touch pylons to save checkpoints<br>
+      ♦ Ride moving platforms &nbsp;·&nbsp; ✕ Time the laser walls &nbsp;·&nbsp; ▲ Spikes and beams are lethal.<br>
+      <b>Flip gravity in mid-air to fly between floor and ceiling.</b></p>
+      <button class="btn" id="btn-howto-back">BACK</button>
+    </section>
+
+    <section id="screen-levels" class="screen hidden">
+      <h2>LEVEL SELECT</h2>
+      <div id="level-grid"></div>
+      <button class="btn" id="btn-levels-back">BACK</button>
+    </section>
+
+    <section id="screen-pause" class="screen hidden">
+      <h2>PAUSED</h2>
+      <div class="menu-col">
+        <button class="btn btn-primary" id="btn-resume">RESUME</button>
+        <button class="btn" id="btn-restart">RESTART LEVEL</button>
+        <button class="btn" id="btn-pause-levels">LEVEL SELECT</button>
+        <button class="btn btn-small" id="btn-sound2">SOUND: ON</button>
+        <button class="btn btn-small" id="btn-quit">QUIT TO TITLE</button>
+      </div>
+    </section>
+
+    <section id="screen-victory" class="screen hidden">
+      <h2 id="victory-title">LEVEL COMPLETE</h2>
+      <div class="stats">
+        <div><label>TIME</label><span id="stat-time">0:00.0</span></div>
+        <div><label>BEST</label><span id="stat-best">—</span></div>
+        <div><label>SHARDS</label><span id="stat-shards">0/0</span></div>
+        <div><label>DEATHS</label><span id="stat-deaths">0</span></div>
+      </div>
+      <div class="menu-col">
+        <button class="btn btn-primary" id="btn-next">NEXT LEVEL</button>
+        <button class="btn" id="btn-again">REPLAY</button>
+        <button class="btn btn-small" id="btn-victory-levels">LEVEL SELECT</button>
+      </div>
+    </section>
+
+    <section id="screen-complete" class="screen hidden">
+      <h1 class="glitch" data-text="GRAVITY BROKEN">GRAVITY BROKEN</h1>
+      <p class="tagline">ALL 8 SECTORS CLEARED — THE FIELD IS YOURS</p>
+      <div class="stats">
+        <div><label>TOTAL SHARDS</label><span id="stat-total-shards">0/0</span></div>
+        <div><label>TOTAL DEATHS</label><span id="stat-total-deaths">0</span></div>
+      </div>
+      <div class="menu-col">
+        <button class="btn btn-primary" id="btn-complete-levels">LEVEL SELECT</button>
+        <button class="btn" id="btn-complete-title">TITLE SCREEN</button>
+      </div>
+    </section>
+  </div>
+</div>
+
+<script src="js/levels.js"></script>
+<script src="js/audio.js"></script>
+<script src="js/particles.js"></script>
+<script src="js/entities.js"></script>
+<script src="js/input.js"></script>
+<script src="js/game.js"></script>
+<script>window.addEventListener('load', () => GravityBreak.boot());</script>
+</body>
+</html>
