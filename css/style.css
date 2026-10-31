@@ -1,0 +1,265 @@
+/* ============================================================
+   MYSTERY HOUSE – styles
+   ============================================================ */
+:root{
+  --bg:#0b0c14;
+  --panel:rgba(20,22,34,0.88);
+  --text:#e8e8ea;
+  --muted:#a8a8b8;
+  --accent:#c9a227;
+  --accent-glow:rgba(201,162,39,0.45);
+  --danger:#b34545;
+  --font:'Courier New', Courier, monospace;
+}
+
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+html, body {
+  margin: 0; padding: 0;
+  width: 100%; height: 100%;
+  background: #050508;
+  color: var(--text);
+  font-family: var(--font);
+  overflow: hidden;
+  text-rendering: optimizeLegibility;
+}
+
+#game-container {
+  position: relative;
+  width: 100vw;
+  height: 100vh;
+  background: #050508;
+  overflow: hidden;
+}
+
+#gameCanvas {
+  position: absolute;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  display: block;
+}
+
+/* ---------- Screens / Panels ---------- */
+.screen, .panel {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  z-index: 40;
+}
+.screen.hidden, .panel.hidden { display: none !important; }
+
+.screen { background: radial-gradient(circle at center, #141626 0%, #05060b 100%); }
+
+.logo {
+  font-size: clamp(2.2rem, 12vw, 4.5rem);
+  font-weight: 900;
+  letter-spacing: 0.18em;
+  color: var(--text);
+  text-transform: uppercase;
+  text-shadow: 0 0 22px var(--accent-glow), 0 2px 0 #000;
+  margin-bottom: 0.4rem;
+}
+.subtitle {
+  font-size: clamp(1rem, 4vw, 1.5rem);
+  color: var(--muted);
+  letter-spacing: 0.35em;
+  margin-bottom: 2.2rem;
+  text-transform: uppercase;
+}
+.hint {
+  font-size: clamp(0.85rem, 3vw, 1.1rem);
+  color: var(--muted);
+  letter-spacing: 0.2em;
+  margin-top: 1.6rem;
+}
+
+/* ---------- Buttons ---------- */
+.big-btn, .ctrl-btn {
+  font-family: var(--font);
+  border: none;
+  border-radius: 10px;
+  color: #0b0c14;
+  background: linear-gradient(180deg, var(--accent), #a67c10);
+  cursor: pointer;
+  font-weight: 800;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  box-shadow: 0 0 0 2px rgba(255,255,255,0.25) inset, 0 8px 0 #4a3800;
+  transition: transform 0.06s, box-shadow 0.06s, filter 0.2s;
+  outline: none;
+}
+.big-btn:active, .ctrl-btn:active {
+  transform: translateY(4px);
+  box-shadow: 0 0 0 2px rgba(255,255,255,0.25) inset, 0 2px 0 #4a3800;
+}
+.big-btn.ghost {
+  background: transparent;
+  color: var(--muted);
+  box-shadow: 0 0 0 1.5px rgba(168,168,184,0.35) inset;
+  text-shadow: none;
+}
+.big-btn.ghost:active { background: rgba(255,255,255,0.06); }
+
+.big-btn { font-size: clamp(1rem, 4vw, 1.35rem); padding: 0.85rem 2.2rem; min-width: 210px; }
+.ctrl-btn {
+  font-size: clamp(0.8rem, 3.2vw, 1rem);
+  padding: 0.55rem 1rem;
+  min-width: 70px;
+}
+
+/* ---------- HUD ---------- */
+#hud {
+  position: absolute;
+  top: 1.2rem; left: 1rem; right: 1rem;
+  z-index: 30;
+  pointer-events: none;
+}
+.room-name {
+  font-size: clamp(1.1rem, 4vw, 1.6rem);
+  font-weight: 900;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: var(--accent);
+  text-shadow: 0 0 14px var(--accent-glow);
+  margin: 0 0 0.35rem 0;
+  pointer-events: auto;
+}
+.room-desc {
+  font-size: clamp(0.85rem, 3vw, 1.05rem);
+  color: #d8d8e0;
+  margin: 0;
+  pointer-events: auto;
+  max-width: 720px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+#ctrl-bar {
+  position: absolute;
+  top: 1rem; right: 1rem;
+  display: flex; gap: 0.55rem;
+  z-index: 30;
+}
+
+/* ---------- Inventory ---------- */
+#inventory-wrap {
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  height: 118px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  z-index: 30;
+  pointer-events: none;
+  background: linear-gradient(180deg, transparent, rgba(10,11,18,0.75));
+  border-top: 1px solid rgba(201,162,39,0.25);
+}
+#inventory-wrap { pointer-events: auto; }
+#inventory-wrap > * { pointer-events: auto; }
+
+#inventory-label {
+  font-size: clamp(0.75rem, 3vw, 0.95rem);
+  letter-spacing: 0.45em;
+  color: var(--accent);
+  text-transform: uppercase;
+  margin: 0.55rem 0 0.25rem 0;
+  text-shadow: 0 0 12px var(--accent-glow);
+}
+#inventory-slots {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  justify-content: center;
+  max-width: 96%;
+  margin-bottom: 0.35rem;
+}
+.inv-slot {
+  width: clamp(42px, 8vw, 56px);
+  height: clamp(42px, 8vw, 56px);
+  border-radius: 10px;
+  border: 2px solid rgba(201,162,39,0.45);
+  background: rgba(20,22,34,0.85);
+  color: #e8e8ea;
+  font-size: clamp(1rem, 3.5vw, 1.4rem);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  position: relative;
+  box-shadow: 0 4px 0 #231a00;
+  transition: transform 0.1s, border-color 0.2s, box-shadow 0.2s;
+}
+.inv-slot:active { transform: translateY(3px); box-shadow: 0 1px 0 #231a00; }
+.inv-slot.selected {
+  border-color: #fff;
+  box-shadow: 0 0 18px rgba(255,255,255,0.55), 0 4px 0 #231a00;
+  transform: scale(1.06);
+}
+.inv-slot .inv-name {
+  position: absolute;
+  bottom: -22px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 0.62rem;
+  color: #c8c8d4;
+  white-space: nowrap;
+  pointer-events: none;
+  opacity: 0.85;
+}
+#inventory-hint {
+  font-size: clamp(0.68rem, 2.5vw, 0.8rem);
+  color: var(--muted);
+  letter-spacing: 0.15em;
+  margin-bottom: 0.45rem;
+}
+
+/* ---------- Panels ---------- */
+.panel {
+  background: var(--panel);
+  backdrop-filter: blur(6px);
+  border: 1px solid rgba(201,162,39,0.35);
+  border-radius: 16px;
+  padding: 2rem 1.5rem;
+  width: min(90vw, 520px);
+  box-shadow: 0 20px 60px rgba(0,0,0,0.7);
+}
+.panel-title {
+  font-size: clamp(1.2rem, 5vw, 1.6rem);
+  color: var(--accent);
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  margin: 0 0 1.1rem 0;
+  text-shadow: 0 0 14px var(--accent-glow);
+}
+#panel-message-text, #panel-hint-text {
+  font-size: clamp(1rem, 3.5vw, 1.25rem);
+  color: #e0e0e8;
+  line-height: 1.6;
+  margin-bottom: 1.4rem;
+  min-height: 3.2rem;
+}
+.ending-title {
+  font-size: clamp(1.5rem, 6vw, 2.2rem);
+  font-weight: 900;
+  letter-spacing: 0.25em;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin: 0 0 0.8rem 0;
+  text-shadow: 0 0 20px var(--accent-glow);
+}
+.ending-text {
+  font-size: clamp(1rem, 4vw, 1.3rem);
+  color: #d8d8e0;
+  line-height: 1.7;
+  margin-bottom: 1.6rem;
+}
+
+/* small text */
+.small { font-size: clamp(0.7rem, 2.5vw, 0.82rem); color: var(--muted); letter-spacing: 0.15em; }
+
+/* avoid context menu on long touch */
+canvas { -webkit-user-select: none; user-select: none; }

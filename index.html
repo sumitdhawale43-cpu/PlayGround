@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>MYSTERY HOUSE &ndash; Escape Puzzle</title>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<div id="game-container">
+  <canvas id="gameCanvas"></canvas>
+
+  <!-- Title screen -->
+  <div id="title-screen" class="screen">
+    <div class="logo">MYSTERY HOUSE</div>
+    <div class="subtitle">An Escape Puzzle Adventure</div>
+    <button id="btn-start" class="big-btn">Enter the Mansion</button>
+    <div class="hint">Tap / Click to interact &bull; Inventory at the bottom &bull; Hint button for clues</div>
+  </div>
+
+  <!-- HUD -->
+  <div id="hud" class="hidden">
+    <div id="room-name" class="room-name">FOYER</div>
+    <div id="room-desc" class="room-desc"></div>
+  </div>
+
+  <!-- Control buttons -->
+  <div id="ctrl-bar">
+    <button id="btn-hint" class="ctrl-btn">Hint</button>
+    <button id="btn-menu" class="ctrl-btn">Menu</button>
+    <button id="btn-sound" class="ctrl-btn" title="Sound">&#128266;</button>
+  </div>
+
+  <!-- Inventory -->
+  <div id="inventory-wrap">
+    <div id="inventory-label">INVENTORY</div>
+    <div id="inventory-slots"></div>
+    <div id="inventory-hint" class="small">Tap an item to select it, then tap an object to use it.</div>
+  </div>
+
+  <!-- Message panel -->
+  <div id="panel-message" class="panel hidden">
+    <div id="panel-message-text"></div>
+    <button id="btn-message-ok" class="big-btn">OK</button>
+  </div>
+
+  <!-- Hint panel -->
+  <div id="panel-hint" class="panel hidden">
+    <div class="panel-title">HINT</div>
+    <div id="panel-hint-text"></div>
+    <button id="btn-hint-next" class="big-btn">Next Hint</button>
+    <button id="btn-hint-close" class="big-btn ghost">Close</button>
+  </div>
+
+  <!-- Menu panel -->
+  <div id="panel-menu" class="panel hidden">
+    <div class="panel-title">MENU</div>
+    <button id="btn-resume" class="big-btn">Resume</button>
+    <button id="btn-restart" class="big-btn">Restart Game</button>
+    <button id="btn-sound-menu" class="big-btn" id="btn-sound-menu">Sound: ON</button>
+  </div>
+
+  <!-- Ending panel -->
+  <div id="panel-ending" class="panel hidden">
+    <div id="ending-title" class="ending-title"></div>
+    <div id="ending-text" class="ending-text"></div>
+    <button id="btn-ending-restart" class="big-btn">Play Again</button>
+  </div>
+</div>
+<script src="js/game.js"></script>
+</body>
+</html>
