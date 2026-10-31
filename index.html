@@ -1,0 +1,174 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#06060b">
+  <meta name="description" content="Everyone has a gift. Yours only arrives after you've been broken. Lose to the gods, steal their powers, and decide what kind of god you become.">
+  <title>GOD COMPLEX — Lose. Take. Ascend.</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' fill='%2306060b'/%3E%3Ccircle cx='32' cy='32' r='22' fill='none' stroke='%23d9b978'/%3E%3Cpath d='M14 32 Q32 18 50 32 Q32 46 14 32Z' fill='none' stroke='%23f2ecdf'/%3E%3Ccircle cx='32' cy='32' r='5' fill='%23d9b978'/%3E%3C/svg%3E">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body data-screen="title">
+  <div class="backdrop" aria-hidden="true"></div>
+  <canvas id="cosmos" aria-hidden="true"></canvas>
+  <div class="grain" aria-hidden="true"></div>
+  <div class="vignette" aria-hidden="true"></div>
+
+  <main id="app">
+    <!-- ───────────────────────── TITLE ───────────────────────── -->
+    <section id="screen-title" class="screen screen-title active" aria-label="Title">
+      <header class="topline">
+        <span class="brand"><span class="brand-mark">◇</span> GOD COMPLEX</span>
+        <span class="topline-meta">A GAME ABOUT LOSING</span>
+      </header>
+
+      <div class="title-stage">
+        <div class="title-orbit" id="titleOrbit" aria-hidden="true"></div>
+        <p class="eyebrow reveal-1">EVERYONE IS BORN WITH A GIFT</p>
+        <h1 class="title reveal-2"><span class="title-solid">GOD</span><span class="title-outline">COMPLEX</span></h1>
+        <p class="tagline reveal-3">Yours only arrives after you&rsquo;ve been broken.</p>
+        <div class="title-actions reveal-4">
+          <button id="btn-start" class="btn btn-primary" type="button"><span>ENTER THE LADDER</span><span class="btn-arrow">→</span></button>
+          <button id="btn-how" class="btn btn-ghost" type="button">HOW IT WORKS</button>
+        </div>
+      </div>
+
+      <footer class="title-footer">
+        <div class="creed"><span>LOSE</span><i></i><span>TAKE</span><i></i><span>ASCEND</span></div>
+        <span class="foot-meta">NO GOD SURVIVES A MIRROR</span>
+      </footer>
+    </section>
+
+    <!-- ───────────────────────── LADDER ───────────────────────── -->
+    <section id="screen-ladder" class="screen screen-ladder" aria-label="The Ladder">
+      <div class="page">
+        <header class="page-head">
+          <button class="brand brand-button" id="btn-home" type="button"><span class="brand-mark">◇</span> GOD COMPLEX</button>
+          <div class="head-actions">
+            <button class="text-btn arsenal-jump" id="btn-arsenal-jump" type="button">ARSENAL</button>
+            <button class="text-btn" id="btn-rules" type="button">THE RULE</button>
+            <span class="head-divider"></span>
+            <span class="head-stat" id="headLosses">DEFEATS 0</span>
+          </div>
+        </header>
+
+        <div class="ladder-heading">
+          <div>
+            <p class="eyebrow">EIGHT RINGS &middot; SEVEN GIFTS</p>
+            <h2 class="ladder-title">THE LADDER</h2>
+          </div>
+          <p class="lede">You cannot steal from anyone you defeat. Only those who break you leave something behind.</p>
+        </div>
+
+        <div class="ladder-grid">
+          <div class="ladder-main">
+            <div class="section-label"><span>THE ASCENT</span><span id="ladderProgress">0 / 7 GIFTS</span></div>
+            <div id="ladderList" class="ladder-list"></div>
+            <p class="ladder-note" id="ladderNote">Losing is not failure. It is the only way up.</p>
+          </div>
+
+          <aside class="arsenal" id="arsenal" aria-label="Your arsenal">
+            <div class="section-label"><span>YOUR ARSENAL</span><span id="giftCount">0 / 7</span></div>
+            <div class="stat-strip">
+              <div class="stat"><span>VITALITY</span><strong id="statHp">60</strong></div>
+              <div class="stat"><span>STRIKE</span><strong id="statStrike">6</strong></div>
+              <div class="stat"><span>GIFTS</span><strong id="statGifts">0</strong></div>
+            </div>
+            <div class="loadout-label">EQUIPPED <span>3 MAX</span></div>
+            <div id="loadoutSlots" class="loadout-slots"></div>
+            <div class="loadout-label">STOLEN GIFTS <span>TAP TO EQUIP</span></div>
+            <div id="giftGrid" class="gift-grid"></div>
+            <p class="hint" id="arsenalHint">Every gift you steal raises your vitality and strike. It also fills the hole it left.</p>
+            <div class="arsenal-footer">
+              <span>THEY BEAT YOU.</span>
+              <span class="gold">YOU KEPT THEM.</span>
+            </div>
+          </aside>
+        </div>
+      </div>
+    </section>
+
+    <!-- ───────────────────────── BATTLE ───────────────────────── -->
+    <section id="screen-battle" class="screen screen-battle" aria-label="Battle">
+      <header class="battle-head">
+        <button class="text-btn battle-home" id="btn-battle-menu" type="button" disabled>THE LADDER</button>
+        <div class="battle-title">
+          <span id="battleRound">RING I</span>
+          <strong id="battleBossName">THE EMBER MONK</strong>
+        </div>
+        <button class="text-btn sound-toggle" id="btn-mute" type="button" aria-pressed="false">SOUND ON</button>
+      </header>
+
+      <div class="arena" id="arena">
+        <div class="arena-mark" aria-hidden="true"><span>THE RING</span><strong id="arenaRing">I</strong></div>
+        <div class="fighter fighter-player" id="playerCard">
+          <div class="fighter-head">
+            <span class="fighter-name">YOU</span>
+            <span class="fighter-sub" id="playerSub">THE UNBROKEN</span>
+          </div>
+          <div class="portrait portrait-player" id="playerPortrait"></div>
+          <div class="hp-wrap">
+            <div class="hp-top"><span>VITALITY</span><span id="playerHpText">60 / 60</span></div>
+            <div class="hp-bar"><div class="hp-fill" id="playerHpBar"></div><div class="hp-ghost" id="playerHpGhost"></div></div>
+          </div>
+          <div class="block-badge" id="playerBlock" hidden><span>◇</span> <b>0</b></div>
+          <div class="statuses" id="playerStatuses"></div>
+        </div>
+
+        <div class="arena-mid">
+          <div class="turn-badge" id="turnBadge">TURN 01</div>
+          <div class="mid-rule"></div>
+          <div class="battle-log" id="battleLog" aria-live="polite"></div>
+        </div>
+
+        <div class="fighter fighter-enemy" id="enemyCard">
+          <div class="fighter-head">
+            <span class="fighter-name" id="enemyName">THE EMBER MONK</span>
+            <span class="fighter-sub" id="enemyEpithet">FIRST FLAME</span>
+          </div>
+          <div class="intent-card" id="intentCard">
+            <div class="intent-head"><span class="intent-kicker">INCOMING</span><span id="intentName">CINDER JAB</span></div>
+            <div class="intent-body" id="intentBody">10 damage</div>
+          </div>
+          <div class="portrait portrait-enemy" id="enemyPortrait"></div>
+          <div class="hp-wrap">
+            <div class="hp-top"><span>VITALITY</span><span id="enemyHpText">95 / 95</span></div>
+            <div class="hp-bar enemy"><div class="hp-fill" id="enemyHpBar"></div></div>
+          </div>
+          <div class="block-badge enemy" id="enemyBlock" hidden><span>◇</span> <b>0</b></div>
+          <div class="statuses" id="enemyStatuses"></div>
+          <div class="passive" id="enemyPassive"></div>
+        </div>
+
+        <div class="floaters" id="floaters" aria-hidden="true"></div>
+        <div class="slash" id="slash" aria-hidden="true"></div>
+      </div>
+
+      <div class="command-deck">
+        <div class="energy-meter">
+          <span class="energy-label">ENERGY</span>
+          <div class="energy-pips" id="energyPips"></div>
+        </div>
+        <div class="action-row" id="actionRow"></div>
+        <div class="deck-end">
+          <button class="yield-btn" id="btn-yield" type="button">YIELD</button>
+          <button class="endturn-btn" id="btn-end" type="button"><span>END</span><span>TURN</span></button>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <div id="modal" class="modal" aria-hidden="true">
+    <div class="modal-backdrop" data-close="1"></div>
+    <div class="modal-panel" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+      <div id="modalBody"></div>
+    </div>
+  </div>
+
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+  <script src="engine.js"></script>
+  <script src="game.js"></script>
+</body>
+</html>
