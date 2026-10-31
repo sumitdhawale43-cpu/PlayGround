@@ -1,0 +1,139 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1, user-scalable=no" />
+  <meta name="theme-color" content="#050506" />
+  <meta name="description" content="It only moves when you don't look. But the longer you stare, the more reality breaks." />
+  <title>DON'T LOOK BACK</title>
+  <link rel="icon" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAzMiAzMiI+PHJlY3Qgd2lkdGg9IjMyIiBoZWlnaHQ9IjMyIiBmaWxsPSIjMDUwNTA2Ii8+PHBhdGggZD0iTTE2IDUgMjUgMTYgMTYgMjcgNyAxNloiIGZpbGw9Im5vbmUiIHN0cm9rZT0iI2Q5ZDRjNSIgc3Ryb2tlLXdpZHRoPSIxLjYiLz48Y2lyY2xlIGN4PSIxNiIgY3k9IjE2IiByPSIyIiBmaWxsPSIjYjIzYTMyIi8+PC9zdmc+" />
+  <link rel="stylesheet" href="./styles.css" />
+</head>
+<body>
+  <main id="app">
+    <div id="viewport">
+      <canvas id="scene"></canvas>
+    </div>
+
+    <div class="fx" id="fx" aria-hidden="true">
+      <div class="tint" id="tint"></div>
+      <div class="vignette" id="vignette"></div>
+      <div class="grain" id="grain"></div>
+      <div class="scanlines"></div>
+      <div class="flash" id="flash"></div>
+      <div class="tearbar" id="tearbar"></div>
+      <div class="edge-glow"></div>
+    </div>
+
+    <div id="hud" class="hud is-hidden" aria-live="polite">
+      <div class="hud-top">
+        <div class="hud-brand">DON'T<span>LOOK BACK</span></div>
+        <div class="hud-meter">
+          <span class="meter-label">SIGILS</span>
+          <span class="pips" id="sigilPips"></span>
+        </div>
+        <div class="hud-meter reality-meter">
+          <span class="meter-label">REALITY</span>
+          <span class="pips" id="realityPips"></span>
+        </div>
+      </div>
+
+      <div class="gaze" id="gazeWrap">
+        <div class="gaze-label" id="gazeLabel">IT IS STILL</div>
+        <div class="gaze-bar"><div class="gaze-fill" id="gazeFill"></div></div>
+      </div>
+
+      <div class="reticle" id="reticle"><span></span></div>
+      <div class="message" id="message"></div>
+      <div class="hint" id="hint">WASD MOVE &middot; MOUSE LOOK &middot; SHIFT RUN &middot; SPACE LISTEN</div>
+      <div class="compass" id="compass"><div class="compass-arrow" id="compassArrow"></div><span id="compassText">SIGIL</span></div>
+
+      <button class="pause-btn" id="pauseBtn" aria-label="Pause">II</button>
+    </div>
+
+    <div class="touch-ui" id="touchUI" aria-hidden="true">
+      <div class="stick-base" id="stickBase"><div class="stick-knob" id="stickKnob"></div></div>
+      <button class="touch-btn listen-btn" id="listenBtn">LISTEN</button>
+    </div>
+
+    <section class="overlay menu" id="menu">
+      <div class="menu-bg"></div>
+      <div class="menu-inner">
+        <div class="kicker"><span class="line"></span>AN OBSERVATION HORROR</div>
+        <h1 class="title" aria-label="Don't Look Back">
+          <span class="word ghost">DON'T</span>
+          <span class="word solid">LOOK</span>
+          <span class="word red">BACK</span>
+        </h1>
+        <p class="tagline">It only moves when you don't.<br />But the longer you stare, the more reality breaks.</p>
+        <button class="primary" id="startBtn"><span>ENTER THE HALLS</span><i></i></button>
+        <div class="menu-meta">
+          <div class="controls-mini">
+            <span><b>WASD</b> MOVE</span>
+            <span><b>MOUSE</b> LOOK</span>
+            <span><b>SHIFT</b> RUN</span>
+            <span><b>SPACE</b> LISTEN</span>
+          </div>
+          <div class="notice">HEADPHONES RECOMMENDED &middot; CONTAINS FLASHING LIGHTS</div>
+        </div>
+        <div class="settings">
+          <label class="setting">
+            <span>LOOK SENSITIVITY</span>
+            <input id="sensRange" type="range" min="0.4" max="2.2" step="0.05" value="1" />
+          </label>
+          <label class="setting check">
+            <input id="flashCheck" type="checkbox" checked />
+            <span>REALITY FLASHES</span>
+          </label>
+          <label class="setting check">
+            <input id="muteCheck" type="checkbox" />
+            <span>MUTE</span>
+          </label>
+        </div>
+      </div>
+      <div class="menu-foot">THREE SIGILS. ONE GATE. NO WITNESSES.</div>
+    </section>
+
+    <section class="overlay pause is-hidden" id="pauseOverlay">
+      <div class="card">
+        <div class="card-kicker">HELD BREATH</div>
+        <h2>PAUSED</h2>
+        <p class="card-sub">Looking away doesn't help. It never did.</p>
+        <button class="primary" id="resumeBtn"><span>RETURN</span><i></i></button>
+        <button class="ghost-btn" id="restartBtnPause">RESTART THE HALLS</button>
+      </div>
+    </section>
+
+    <section class="overlay death is-hidden" id="deathOverlay">
+      <div class="card death-card">
+        <div class="card-kicker" id="deathKicker">CAUGHT</div>
+        <h2 id="deathTitle">IT FOUND YOU</h2>
+        <p class="card-sub" id="deathReason">You looked away for too long.</p>
+        <div class="stats" id="deathStats"></div>
+        <button class="primary" id="retryBtn"><span>TRY AGAIN</span><i></i></button>
+        <button class="ghost-btn" id="menuBtn">BACK TO THE DARK</button>
+      </div>
+    </section>
+
+    <section class="overlay win is-hidden" id="winOverlay">
+      <div class="card win-card">
+        <div class="card-kicker">THE GATE</div>
+        <h2>YOU MADE IT OUT</h2>
+        <p class="card-sub">The light does not feel like safety.</p>
+        <div class="stats" id="winStats"></div>
+        <button class="primary" id="againBtn"><span>GO BACK IN</span><i></i></button>
+      </div>
+    </section>
+
+    <div class="jumpscare" id="jumpscare" aria-hidden="true">
+      <img id="jumpscareImg" alt="" />
+      <div class="jumpscare-static"></div>
+    </div>
+
+    <div class="rotate-hint" id="rotateHint">BEST PLAYED IN LANDSCAPE</div>
+    <noscript><div class="noscript">This game needs JavaScript.</div></noscript>
+  </main>
+
+  <script type="module" src="./js/game.js"></script>
+</body>
+</html>
