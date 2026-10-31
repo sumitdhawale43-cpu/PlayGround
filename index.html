@@ -1,0 +1,192 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+  <meta name="theme-color" content="#0c1424" />
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%230c1424'/%3E%3Cpath d='M18 46V18h14a10 10 0 0 1 0 20h-8v8h-6Zm6-14h8a4 4 0 0 0 0-8h-8v8Z' fill='%23ffd447'/%3E%3C/svg%3E" />
+  <meta name="description" content="Trench Royale — Worms-style artillery with Fortnite-style building. Aim, lob, and build your way to victory." />
+  <title>Trench Royale — Worms × Fortnite</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Bungee&family=Nunito:wght@600;700;800;900&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div id="app">
+    <canvas id="game" aria-label="Trench Royale battlefield"></canvas>
+
+    <!-- ================= HUD ================= -->
+    <div id="hud" class="hud is-hidden" aria-live="polite">
+      <header class="topbar">
+        <div class="team-panel team-blue" id="teamBlue">
+          <div class="team-head"><span class="team-dot"></span><span class="team-name">BLUE CREW</span><span class="team-tag" id="blueTag">YOU</span></div>
+          <div class="worm-list" id="blueList"></div>
+        </div>
+
+        <div class="turn-box">
+          <div class="wind-wrap">
+            <span class="wind-label">WIND</span>
+            <div class="wind-gauge"><i id="windFill"></i><span class="wind-center"></span></div>
+            <span class="wind-value" id="windValue">→ 0</span>
+          </div>
+          <div class="turn-label" id="turnLabel">TURN 1 · YOUR MOVE</div>
+        </div>
+
+        <div class="team-panel team-red" id="teamRed">
+          <div class="team-head"><span class="team-tag" id="redTag">CPU</span><span class="team-name">RED CREW</span><span class="team-dot"></span></div>
+          <div class="worm-list" id="redList"></div>
+        </div>
+      </header>
+
+      <div class="toast" id="toast"></div>
+
+      <div class="build-banner is-hidden" id="buildBanner">
+        <span class="build-pulse"></span>
+        <b>BUILD MODE</b>
+        <span id="buildHint">CLICK / TAP TO PLACE · B TO EXIT</span>
+        <span class="build-piece" id="buildPieceTag">WALL</span>
+      </div>
+
+      <div class="reaction is-hidden" id="reaction">
+        <div class="reaction-card">
+          <div class="reaction-warn"><span>⚠</span> INCOMING</div>
+          <button class="reaction-btn" id="reactionBtn">
+            <span class="reaction-main">REACTION BUILD</span>
+            <span class="reaction-cost" id="reactionCost">15 WOOD</span>
+          </button>
+          <div class="reaction-key">SPACE</div>
+        </div>
+      </div>
+
+      <div class="hintbar" id="hintbar">
+        <span class="hint-ico">🖱</span>
+        <span id="hintText">Drag from your worm to aim. Release to fire.</span>
+      </div>
+
+      <footer class="bottombar">
+        <div class="worm-card">
+          <div class="worm-avatar" id="wormAvatar"><span></span></div>
+          <div class="worm-meta">
+            <div class="worm-name-row"><span class="worm-name" id="activeName">BRAMBLE</span><span class="worm-team" id="activeTeam">BLUE</span></div>
+            <div class="meter hp-meter"><i id="activeHpBar"></i><span id="activeHpText">100 HP</span></div>
+            <div class="meter move-meter"><i id="activeMoveBar"></i><span id="activeMoveText">MOVE 110</span></div>
+          </div>
+        </div>
+
+        <div class="action-dock">
+          <div class="dock-group" id="weaponBtns"></div>
+          <div class="dock-divider"></div>
+          <div class="dock-group" id="matBtns"></div>
+          <div class="dock-divider"></div>
+          <div class="dock-group" id="pieceBtns"></div>
+        </div>
+
+        <div class="utility">
+          <button class="util-btn build-toggle" id="buildToggle"><span class="key">B</span>BUILD</button>
+          <button class="util-btn icon-btn" id="muteBtn" title="Toggle sound" aria-label="Toggle sound">🔊</button>
+          <button class="util-btn icon-btn" id="helpBtn" title="How to play" aria-label="How to play">?</button>
+        </div>
+      </footer>
+
+      <div class="touch-move" id="touchMove">
+        <button class="touch-btn" data-move="left" aria-label="Move left">◀</button>
+        <button class="touch-btn jump" data-move="jump" aria-label="Jump">JUMP</button>
+        <button class="touch-btn" data-move="right" aria-label="Move right">▶</button>
+      </div>
+    </div>
+
+    <!-- ================= MENU ================= -->
+    <div id="menu" class="overlay menu-overlay">
+      <div class="float-tiles" aria-hidden="true">
+        <span class="tile t1"></span><span class="tile t2"></span><span class="tile t3"></span><span class="tile t4"></span>
+      </div>
+      <div class="menu-card">
+        <div class="eyebrow"><span></span> 2D ARTILLERY × BUILD BATTLE <span></span></div>
+        <h1 class="logo"><span class="logo-top">TRENCH</span><span class="logo-bottom">ROYALE</span></h1>
+        <p class="tagline">Worms-style artillery. Fortnite-style building.<br /><em>Blow up the map. Build a way out.</em></p>
+
+        <div class="mode-row">
+          <button class="big-btn primary" data-mode="cpu">
+            <span class="big-btn-main">PLAY vs CPU</span>
+            <span class="big-btn-sub">Solo · 2 worms a side</span>
+          </button>
+          <button class="big-btn ghost" data-mode="local">
+            <span class="big-btn-main">LOCAL 2P</span>
+            <span class="big-btn-sub">Hotseat · pass the device</span>
+          </button>
+        </div>
+
+        <div class="difficulty" id="difficulty">
+          <span class="diff-label">CPU SKILL</span>
+          <button data-diff="easy">ROOKIE</button>
+          <button data-diff="normal" class="active">VETERAN</button>
+          <button data-diff="hard">ELITE</button>
+        </div>
+
+        <div class="menu-foot">
+          <button class="text-btn" id="menuHelp">HOW TO PLAY</button>
+          <span class="menu-controls">DRAG TO AIM · Q/E/F TO BUILD · SPACE TO REACT</span>
+        </div>
+      </div>
+      <div class="menu-credit">A tiny artillery sandbox · sound on recommended</div>
+    </div>
+
+    <!-- ================= HELP ================= -->
+    <div id="help" class="overlay sheet-overlay is-hidden">
+      <div class="sheet">
+        <button class="sheet-close" id="helpClose" aria-label="Close">✕</button>
+        <div class="eyebrow"><span></span> FIELD MANUAL <span></span></div>
+        <h2 class="sheet-title">HOW TO PLAY</h2>
+
+        <div class="help-grid">
+          <div class="help-col">
+            <h3>ARTILLERY</h3>
+            <ul>
+              <li><b>Drag</b> from the battlefield to aim. Drag farther for more power, then release to fire.</li>
+              <li><b>A / D</b> or <b>← / →</b> to crawl. <b>W</b> / <b>Space</b> to jump. You have a limited move meter each turn.</li>
+              <li><b>Z</b> bazooka · <b>X</b> grenade (3 bounces, short fuse).</li>
+              <li>Watch the <b>wind</b>. It pushes every shot sideways.</li>
+            </ul>
+          </div>
+          <div class="help-col">
+            <h3>BUILDING</h3>
+            <ul>
+              <li><b>Q</b> wall · <b>E</b> ramp · <b>F</b> floor. Click or drag to place pieces on the grid.</li>
+              <li><b>1 / 2 / 3</b> pick wood, brick, or metal. Stronger material = more HP, more cost.</li>
+              <li>Blow up terrain and enemy builds to <b>farm materials</b>. Crates drop a jackpot.</li>
+              <li><b>Reaction build:</b> while an enemy rocket is in the air, hit <b>Space</b> (or the big button) to slam down a wall and block the blast.</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="help-tip">
+          <span class="tip-badge">PRO TIP</span>
+          Walls don't just stop rockets — they cut blast damage to worms behind them. Build high ground, then rain down trouble.
+        </div>
+
+        <button class="big-btn primary wide" id="helpPlay">LET'S PLAY</button>
+      </div>
+    </div>
+
+    <!-- ================= GAME OVER ================= -->
+    <div id="gameover" class="overlay sheet-overlay is-hidden">
+      <div class="sheet gameover-sheet">
+        <div class="winner-burst" id="winnerBurst">VICTORY</div>
+        <h2 class="winner-title" id="winnerTitle">BLUE CREW WINS!</h2>
+        <p class="winner-sub" id="winnerSub">The battlefield belongs to you.</p>
+        <div class="stats" id="stats"></div>
+        <div class="mode-row">
+          <button class="big-btn primary" id="rematchBtn"><span class="big-btn-main">REMATCH</span><span class="big-btn-sub">Same crews, fresh map</span></button>
+          <button class="big-btn ghost" id="menuBtn"><span class="big-btn-main">MAIN MENU</span><span class="big-btn-sub">Change mode</span></button>
+        </div>
+      </div>
+    </div>
+
+    <div class="rotate-hint is-hidden" id="rotateHint">↻ Rotate for a wider battlefield</div>
+    <div class="noise" aria-hidden="true"></div>
+  </div>
+
+  <script type="module" src="src/game.js"></script>
+</body>
+</html>
