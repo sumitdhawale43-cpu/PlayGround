@@ -1,0 +1,196 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+<meta name="theme-color" content="#07090f" />
+<meta name="description" content="DRIFT LEGENDS - a polished 2D arcade racing game with drifting, nitro, AI opponents, upgrades and three race tracks." />
+<title>DRIFT LEGENDS - Racing Challenge</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='20' fill='%230b0e16'/%3E%3Ctext y='.9em' font-size='78' x='10'%3E%F0%9F%8F%81%3C/text%3E%3C/svg%3E" />
+<link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+
+<canvas id="game" aria-label="Drift Legends race view"></canvas>
+<div id="crt" aria-hidden="true"></div>
+
+<!-- ================= HUD ================= -->
+<div id="hud" class="hidden" aria-hidden="true">
+  <button id="btn-pause" class="icon-btn" aria-label="Pause game">&#10073;&#10073;</button>
+  <div id="countdown" class="hidden"></div>
+  <div id="banner" class="hidden"></div>
+  <div id="wrongway" class="hidden">WRONG WAY</div>
+  <div id="driftbox" class="hidden"><b id="drift-num">0</b><span>DRIFT CHAIN</span></div>
+</div>
+
+<!-- ================= TOUCH CONTROLS ================= -->
+<div id="touch" class="hidden" aria-hidden="true">
+  <div class="pad pad-left">
+    <button class="tbtn" data-ctl="left" aria-label="Steer left">&#9664;</button>
+    <button class="tbtn" data-ctl="right" aria-label="Steer right">&#9654;</button>
+  </div>
+  <div class="pad pad-right">
+    <button class="tbtn t-small" data-ctl="handbrake" aria-label="Handbrake drift">DRIFT</button>
+    <button class="tbtn t-small t-nitro" data-ctl="nitro" aria-label="Nitro boost">NITRO</button>
+    <button class="tbtn t-brake" data-ctl="brake" aria-label="Brake and reverse">&#9660;</button>
+    <button class="tbtn t-gas" data-ctl="throttle" aria-label="Accelerate">&#9650;</button>
+  </div>
+</div>
+
+<!-- ================= SCREENS ================= -->
+<div id="ui">
+
+  <section class="screen active" id="scr-menu">
+    <div class="menu-inner">
+      <div class="logo">
+        <div class="logo-kicker">ARCADE RACING</div>
+        <div class="logo-drift">DRIFT</div>
+        <div class="logo-legends">LEGENDS</div>
+        <div class="logo-sub">RACING CHALLENGE</div>
+      </div>
+      <div class="menu-actions">
+        <button class="btn btn-primary btn-big" id="btn-start">Start Game</button>
+        <div class="btn-row">
+          <button class="btn" id="btn-garage">Garage</button>
+          <button class="btn" id="btn-races">Select Race</button>
+          <button class="btn" id="btn-help">How to Play</button>
+        </div>
+      </div>
+      <div class="menu-foot">
+        <span class="pill">&#129689; <b data-coins>0</b></span>
+        <span class="pill" id="menu-loadout">FALCON GT</span>
+        <span class="pill" id="menu-best">BEST LAP --:--.---</span>
+      </div>
+    </div>
+  </section>
+
+  <section class="screen" id="scr-garage">
+    <header class="head">
+      <button class="btn btn-ghost" data-back="scr-menu">&larr; Back</button>
+      <h2>GARAGE</h2>
+      <span class="pill">&#129689; <b data-coins>0</b></span>
+    </header>
+    <div class="garage">
+      <div class="panel list" id="car-list"></div>
+      <div class="panel detail">
+        <canvas id="car-preview" width="520" height="220"></canvas>
+        <div class="detail-head">
+          <h3 id="car-name">FALCON GT</h3>
+          <span class="tag" id="car-class">SPORT</span>
+        </div>
+        <p id="car-desc"></p>
+        <div class="stats" id="car-stats"></div>
+        <div class="upg-head"><span>UPGRADES</span><span id="upg-count">0/20</span></div>
+        <div class="upgrades" id="car-upgrades"></div>
+        <button class="btn btn-primary" id="btn-equip">Select Car</button>
+      </div>
+    </div>
+  </section>
+
+  <section class="screen" id="scr-tracks">
+    <header class="head">
+      <button class="btn btn-ghost" data-back="scr-menu">&larr; Back</button>
+      <h2>SELECT RACE</h2>
+      <span class="pill">&#129689; <b data-coins>0</b></span>
+    </header>
+    <div class="track-list" id="track-list"></div>
+    <div class="track-foot">
+      <div class="laps">
+        <span>LAPS</span>
+        <button class="chip" data-laps="1">1</button>
+        <button class="chip active" data-laps="3">3</button>
+        <button class="chip" data-laps="5">5</button>
+      </div>
+      <button class="btn btn-primary btn-big" id="btn-start-race">Start Race</button>
+    </div>
+  </section>
+
+  <section class="screen" id="scr-help">
+    <header class="head">
+      <button class="btn btn-ghost" data-back="scr-menu">&larr; Back</button>
+      <h2>HOW TO PLAY</h2>
+      <span class="pill">&#129689; <b data-coins>0</b></span>
+    </header>
+    <div class="help panel">
+      <div class="help-grid">
+        <div class="help-col">
+          <h4>KEYBOARD</h4>
+          <ul>
+            <li><kbd>W</kbd><kbd>&uarr;</kbd> Accelerate</li>
+            <li><kbd>S</kbd><kbd>&darr;</kbd> Brake / Reverse</li>
+            <li><kbd>A</kbd><kbd>D</kbd><kbd>&larr;</kbd><kbd>&rarr;</kbd> Steer</li>
+            <li><kbd>SPACE</kbd> Handbrake - start a drift</li>
+            <li><kbd>SHIFT</kbd> Nitro boost</li>
+            <li><kbd>ESC</kbd> Pause &nbsp; <kbd>R</kbd> Recover</li>
+          </ul>
+        </div>
+        <div class="help-col">
+          <h4>TOUCH</h4>
+          <ul>
+            <li><b>&#9664; &#9654;</b> steer pads (left)</li>
+            <li><b>&#9650; &#9660;</b> gas / brake (right)</li>
+            <li><b>DRIFT</b> handbrake for slides</li>
+            <li><b>NITRO</b> hold to blast past rivals</li>
+          </ul>
+        </div>
+        <div class="help-col">
+          <h4>SCORING</h4>
+          <ul>
+            <li>Hold a slide to build a <b>drift chain</b></li>
+            <li>Banked drift points pay <b>coins</b> and refill <b>nitro</b></li>
+            <li>Beat lap times to set <b>records</b></li>
+            <li>Finish top 3 to afford new machines</li>
+          </ul>
+        </div>
+      </div>
+      <div class="help-foot">
+        <button class="btn" id="btn-sound">Sound: On</button>
+        <button class="btn btn-ghost" id="btn-reset-save">Reset progress</button>
+      </div>
+    </div>
+  </section>
+
+  <section class="screen" id="scr-pause">
+    <div class="card pause-card">
+      <h2>PAUSED</h2>
+      <div class="pause-stats" id="pause-stats"></div>
+      <button class="btn btn-primary" id="btn-resume">Resume</button>
+      <button class="btn" id="btn-restart">Restart Race</button>
+      <button class="btn" id="btn-sound2">Sound: On</button>
+      <button class="btn btn-ghost" id="btn-quit">Quit to Menu</button>
+    </div>
+  </section>
+
+  <section class="screen" id="scr-results">
+    <div class="card results-card">
+      <div class="res-top">
+        <div class="res-pos" id="res-pos">1st</div>
+        <div class="res-title">
+          <h2 id="res-headline">FINISH!</h2>
+          <span id="res-track">SUNSET HARBOR</span>
+        </div>
+      </div>
+      <div class="res-grid">
+        <div><span>TOTAL</span><b id="res-total">00:00.000</b></div>
+        <div><span>BEST LAP</span><b id="res-best">00:00.000</b></div>
+        <div><span>DRIFT</span><b id="res-drift">0</b></div>
+        <div><span>COINS</span><b id="res-coins">+0</b></div>
+      </div>
+      <div class="res-table-wrap"><table class="res-table" id="res-table"></table></div>
+      <div class="res-actions">
+        <button class="btn btn-primary" id="btn-again">Race Again</button>
+        <button class="btn" id="btn-next">Next Circuit</button>
+        <button class="btn btn-ghost" id="btn-menu2">Main Menu</button>
+      </div>
+    </div>
+  </section>
+
+</div>
+
+<div id="loading"><div class="loader-bar"><i></i></div><span>PREPARING THE GRID...</span></div>
+
+<noscript><div class="noscript">DRIFT LEGENDS needs JavaScript enabled.</div></noscript>
+
+<script type="module" src="js/main.js"></script>
+</body>
+</html>
