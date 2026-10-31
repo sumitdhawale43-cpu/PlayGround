@@ -1,0 +1,142 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1, user-scalable=no">
+  <meta name="theme-color" content="#05060c">
+  <meta name="description" content="Chrono Debt — a neon arena combat game where every second you steal comes back for you.">
+  <title>CHRONO DEBT — every second is a loan</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' fill='%2305060c'/%3E%3Ccircle cx='32' cy='32' r='23' fill='none' stroke='%2361f1ff' stroke-width='2'/%3E%3Cpath d='M32 16v16l11 7' fill='none' stroke='%23ffb84d' stroke-width='3' stroke-linecap='round'/%3E%3C/svg%3E">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div id="app" class="is-menu">
+    <canvas id="game" aria-label="Chrono Debt game arena"></canvas>
+
+    <div class="fx scanlines" aria-hidden="true"></div>
+    <div class="fx vignette" id="vignette" aria-hidden="true"></div>
+    <div class="fx grain" aria-hidden="true"></div>
+
+    <header id="hud" aria-hidden="true">
+      <div class="hud-block hp-block">
+        <div class="hud-label"><span>VITALITY</span><span id="hpNum">100</span></div>
+        <div class="hp-track"><div class="hp-fill" id="hpFill"></div><div class="hp-segs"></div></div>
+        <div class="sub-row"><span id="dashState">DASH READY</span><span>THE DEBTOR</span></div>
+      </div>
+
+      <div class="hud-center">
+        <div class="wave-line"><span>WAVE</span><strong id="waveNum">01</strong><span>/ 05</span></div>
+        <div class="score" id="score">000000</div>
+        <div class="combo" id="combo">×1.0</div>
+      </div>
+
+      <div class="hud-block debt-block" id="debtBlock">
+        <div class="hud-label"><span>TEMPORAL DEBT</span><span id="debtEcho">0 ECHOES</span></div>
+        <div class="debt-num"><span id="debtNum">0.0</span><small>s</small><em>/ 8.0s</em></div>
+        <div class="debt-track"><div class="debt-fill" id="debtFill"></div><div class="debt-ticks"></div></div>
+        <div class="debt-warn" id="debtWarn">INTEREST ACCRUING</div>
+      </div>
+    </header>
+
+    <div id="bossHud" aria-hidden="true">
+      <div class="boss-name"><span>FINAL COLLECTION</span>THE COLLECTOR</div>
+      <div class="boss-track"><div class="boss-fill" id="bossFill"></div><div class="boss-segs"></div></div>
+    </div>
+
+    <div id="banner" class="banner" aria-live="polite">
+      <div class="banner-kicker"></div>
+      <div class="banner-title"></div>
+      <div class="banner-sub"></div>
+    </div>
+
+    <div id="toast" aria-live="polite"></div>
+
+    <div id="hints" aria-hidden="true">
+      <span><kbd>WASD</kbd> MOVE</span>
+      <span><kbd>MOUSE</kbd> AIM</span>
+      <span><kbd>CLICK</kbd> STRIKE</span>
+      <span class="hint-steal"><kbd>SHIFT</kbd> STEAL TIME</span>
+      <span><kbd>SPACE</kbd> DASH</span>
+      <span><kbd>ESC</kbd> PAUSE</span>
+    </div>
+
+    <div id="touch" aria-hidden="true">
+      <div class="tstick move" id="moveStick"><div class="tknob"></div><span>MOVE</span></div>
+      <div class="tstick aim" id="aimStick"><div class="tknob"></div><span>AIM / FIRE</span></div>
+      <button id="stealBtn" class="tbtn steal" type="button">STEAL<small>TIME</small></button>
+      <button id="dashBtn" class="tbtn dash" type="button">DASH</button>
+    </div>
+
+    <button id="muteBtn" type="button" aria-label="Toggle sound">SOUND ON</button>
+
+    <div class="menu-clock" aria-hidden="true">
+      <span class="mc-grid"></span>
+      <span class="mc-ring r1"></span>
+      <span class="mc-ring r2"></span>
+      <span class="mc-ring r3"></span>
+      <span class="mc-hand h1"></span>
+      <span class="mc-hand h2"></span>
+      <span class="mc-chevron"></span>
+      <span class="mc-echo e1"></span>
+      <span class="mc-echo e2"></span>
+      <span class="mc-echo e3"></span>
+    </div>
+
+    <section id="menu" class="screen">
+      <div class="menu-inner">
+        <div class="kicker"><span class="kicker-line"></span>A TEMPORAL COMBAT SIMULATION</div>
+        <h1 class="title"><span class="t1">CHRONO</span><span class="t2">DEBT</span></h1>
+        <p class="tagline">Steal seconds to win the fight.<br><em>The future charges interest.</em></p>
+
+        <div class="menu-actions">
+          <button id="playBtn" class="btn-primary" type="button"><span>PLAY</span><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M4 2.5 17 10 4 17.5Z"/></svg></button>
+          <div class="best">BEST RUN <span id="bestScore">000000</span></div>
+        </div>
+
+        <div class="controls">
+          <div><kbd>WASD</kbd><span>MOVE</span></div>
+          <div><kbd>MOUSE</kbd><span>AIM</span></div>
+          <div><kbd>CLICK</kbd><span>STRIKE</span></div>
+          <div class="steal-control"><kbd>SHIFT</kbd><span>STEAL TIME</span></div>
+          <div><kbd>SPACE</kbd><span>DASH</span></div>
+        </div>
+      </div>
+      <div class="menu-foot">
+        <span>EVERY SECOND IS A LOAN</span>
+        <span class="foot-mid">THE LEDGER NEVER FORGETS</span>
+        <span>v1.0 / THE DEBTOR</span>
+      </div>
+    </section>
+
+    <section id="pause" class="screen hidden">
+      <div class="panel">
+        <div class="kicker"><span class="kicker-line"></span>TIME IS STILL ACCRUING</div>
+        <h2>PAUSED</h2>
+        <p class="panel-copy">The ledger waits. It is very patient.</p>
+        <button id="resumeBtn" class="btn-primary" type="button"><span>RESUME</span><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M4 2.5 17 10 4 17.5Z"/></svg></button>
+      </div>
+    </section>
+
+    <section id="end" class="screen hidden">
+      <div class="panel end-panel">
+        <div class="end-rank" id="endRank">A</div>
+        <div class="kicker"><span class="kicker-line"></span><span id="endKicker">THE LEDGER IS CLOSED</span></div>
+        <h2 id="endTitle">THE FUTURE<br>COLLECTED</h2>
+        <p class="panel-copy" id="endSub">You borrowed more than the moment could afford.</p>
+
+        <div class="stats">
+          <div><span>SCORE</span><strong id="statScore">0</strong></div>
+          <div><span>KILLS</span><strong id="statKills">0</strong></div>
+          <div><span>TIME STOLEN</span><strong id="statStolen">0.0s</strong></div>
+          <div><span>ECHOES</span><strong id="statEchoes">0</strong></div>
+        </div>
+
+        <button id="retryBtn" class="btn-primary" type="button"><span>RUN IT BACK</span><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M4 2.5 17 10 4 17.5Z"/></svg></button>
+        <div class="end-foot" id="endFoot">BEST <span id="endBest">000000</span></div>
+      </div>
+    </section>
+  </div>
+
+  <script src="game.js"></script>
+</body>
+</html>
