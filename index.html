@@ -1,0 +1,190 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no" />
+  <meta name="theme-color" content="#05010f" />
+  <meta name="description" content="NEON OVERDRIVE — a neon-soaked endless arcade racer. Dodge traffic, chain near misses, burn nitro and chase the high score." />
+  <title>NEON OVERDRIVE — Arcade Racer</title>
+  <link rel="icon" href="./assets/favicon.svg" type="image/svg+xml" />
+  <link rel="preload" href="./assets/fonts/orbitron.woff2" as="font" type="font/woff2" crossorigin />
+  <link rel="preload" href="./assets/fonts/rajdhani-600.woff2" as="font" type="font/woff2" crossorigin />
+  <link rel="stylesheet" href="./styles.css" />
+</head>
+<body>
+  <main id="game-root">
+    <canvas id="game" aria-label="Neon Overdrive racing game"></canvas>
+
+    <div id="fx-layer" aria-hidden="true">
+      <div class="screen-vignette"></div>
+      <div class="scanlines"></div>
+      <div class="nitro-fx" id="nitro-fx"></div>
+      <div class="hit-fx" id="hit-fx"></div>
+      <div class="edge-glow"></div>
+    </div>
+
+    <section id="hud" class="hud" aria-label="Heads up display">
+      <div class="hud-top">
+        <div class="hud-block score-block">
+          <div class="hud-label"><span class="label-dot"></span>SCORE</div>
+          <div class="hud-score" id="score">0000000</div>
+          <div class="hud-best">BEST <span id="hud-best">0000000</span></div>
+        </div>
+
+        <div class="combo" id="combo">
+          <div class="combo-top"><span class="combo-x" id="combo-x">x1.0</span><span class="combo-label">CHAIN</span></div>
+          <div class="combo-bar"><i id="combo-bar"></i></div>
+        </div>
+
+        <div class="hud-right">
+          <div class="sector-chip"><span>SECTOR</span><b id="sector">01</b></div>
+          <button class="icon-btn" id="btn-mute" data-mute aria-label="Mute sound" title="Mute (M)">
+            <svg class="icon-sound" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9v6h4l5 4V5L8 9H4Z"/><path class="sound-wave" d="M16.5 8.5a5 5 0 0 1 0 7M19 6a8.5 8.5 0 0 1 0 12"/></svg>
+            <svg class="icon-muted" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9v6h4l5 4V5L8 9H4Z"/><path d="m16 9 5 6m0-6-5 6"/></svg>
+          </button>
+          <button class="icon-btn" id="btn-pause" aria-label="Pause" title="Pause (P)">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14M16 5v14"/></svg>
+          </button>
+        </div>
+      </div>
+
+      <div class="hud-bottom">
+        <div class="hull-block">
+          <div class="hud-label">HULL INTEGRITY</div>
+          <div class="hull-bars" id="hull-bars" aria-hidden="true">
+            <i></i><i></i><i></i>
+          </div>
+          <div class="hud-sub" id="hull-text">100% // NOMINAL</div>
+        </div>
+
+        <div class="speed-block">
+          <div class="speed-readout"><span id="speed">000</span><em>KM/H</em></div>
+          <div class="distance-readout"><span id="distance">0</span> M</div>
+        </div>
+
+        <div class="nitro-block">
+          <div class="nitro-head"><span>NITRO CELL</span><b id="nitro-pct">0%</b></div>
+          <div class="nitro-bar"><i id="nitro-fill"></i><span class="nitro-ticks"></span></div>
+          <div class="hud-sub" id="nitro-hint">SHIFT / SPACE TO BURN</div>
+        </div>
+      </div>
+    </section>
+
+    <div id="toast-layer" aria-live="polite" aria-atomic="true"></div>
+
+    <div id="screens">
+      <section id="screen-menu" class="screen active" aria-labelledby="menu-title">
+        <div class="menu-skyline-fade" aria-hidden="true"></div>
+        <div class="menu-content">
+          <div class="eyebrow"><span class="eyebrow-line"></span>NIGHT CITY<span class="eyebrow-slash">//</span>SECTOR 09<span class="eyebrow-line"></span></div>
+          <h1 class="logo" id="menu-title" aria-label="Neon Overdrive">
+            <span class="logo-top">NE<span class="logo-accent">O</span>N</span>
+            <span class="logo-main" data-text="OVERDRIVE">OVERDRIVE</span>
+          </h1>
+          <p class="tagline">OUTRUN THE GLOW<span class="tag-dot">·</span>SURVIVE THE NIGHT</p>
+
+          <div class="menu-panel">
+            <div class="panel-corner tl"></div><div class="panel-corner tr"></div>
+            <div class="panel-corner bl"></div><div class="panel-corner br"></div>
+            <div class="menu-best">
+              <span class="menu-best-label">PERSONAL BEST</span>
+              <strong id="menu-best">0000000</strong>
+            </div>
+            <button class="btn btn-primary" id="start-btn" aria-label="Start">
+              <span class="btn-shine" aria-hidden="true"></span>
+              <span class="btn-main">START ENGINE</span>
+              <span class="btn-key">ENTER</span>
+            </button>
+            <div class="menu-controls">
+              <div class="control-row">
+                <span class="keys"><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd><span class="or">/</span><kbd>←</kbd><kbd>→</kbd></span>
+                <span>STEER</span>
+              </div>
+              <div class="control-row">
+                <span class="keys"><kbd>SHIFT</kbd><span class="or">/</span><kbd>SPACE</kbd></span>
+                <span>NITRO</span>
+              </div>
+              <div class="control-row">
+                <span class="keys"><kbd>P</kbd><span class="or">/</span><kbd>ESC</kbd></span>
+                <span>PAUSE</span>
+              </div>
+            </div>
+            <div class="menu-tip"><span class="tip-icon">!</span>THREAD THE TRAFFIC FOR NEAR-MISS BONUSES</div>
+          </div>
+        </div>
+        <div class="menu-footer">
+          <span class="footer-code">NX-09 // HYPERDRIVE SYSTEM ONLINE</span>
+          <span class="footer-sound">SOUND ON — PRESS M TO MUTE</span>
+        </div>
+      </section>
+
+      <section id="screen-pause" class="screen" aria-labelledby="pause-title">
+        <div class="screen-scrim"></div>
+        <div class="panel pause-panel">
+          <div class="panel-corner tl"></div><div class="panel-corner tr"></div>
+          <div class="panel-corner bl"></div><div class="panel-corner br"></div>
+          <div class="eyebrow small"><span class="eyebrow-line"></span>RUN SUSPENDED</div>
+          <h2 class="panel-title" id="pause-title">PAUSED</h2>
+          <p class="panel-sub">ENGINE IDLING<span class="tag-dot">·</span>HIGHWAY ON HOLD</p>
+          <div class="panel-stats">
+            <div><span>SCORE</span><strong id="pause-score">0</strong></div>
+            <div><span>DISTANCE</span><strong id="pause-distance">0 M</strong></div>
+            <div><span>CHAIN</span><strong id="pause-combo">x1.0</strong></div>
+          </div>
+          <button class="btn btn-primary" id="resume-btn" aria-label="Resume"><span class="btn-shine"></span><span class="btn-main">RESUME RUN</span><span class="btn-key">P</span></button>
+          <div class="panel-actions">
+            <button class="btn btn-ghost" id="pause-restart-btn">RESTART</button>
+            <button class="btn btn-ghost" id="pause-menu-btn">MAIN MENU</button>
+          </div>
+          <div class="panel-footer-row">
+            <button class="text-btn" data-mute><span class="mute-dot"></span>TOGGLE SOUND</button>
+            <span class="panel-code">SYS.PAUSE // 0x09</span>
+          </div>
+        </div>
+      </section>
+
+      <section id="screen-over" class="screen" aria-labelledby="over-title">
+        <div class="screen-scrim"></div>
+        <div class="panel over-panel">
+          <div class="panel-corner tl"></div><div class="panel-corner tr"></div>
+          <div class="panel-corner bl"></div><div class="panel-corner br"></div>
+          <div class="eyebrow small danger"><span class="eyebrow-line"></span>CONNECTION LOST</div>
+          <h2 class="panel-title over-title" id="over-title">RUN<br /><span>TERMINATED</span></h2>
+          <div class="new-record" id="new-record" hidden><span>★</span> NEW PERSONAL BEST <span>★</span></div>
+          <div class="final-score-label">FINAL SCORE</div>
+          <div class="final-score" id="final-score">0000000</div>
+          <div class="result-grid">
+            <div><span>DISTANCE</span><b id="final-distance">0 M</b></div>
+            <div><span>TOP SPEED</span><b id="final-speed">0 KM/H</b></div>
+            <div><span>NEAR MISSES</span><b id="final-nearmiss">0</b></div>
+            <div><span>BEST CHAIN</span><b id="final-combo">x1.0</b></div>
+          </div>
+          <button class="btn btn-primary" id="restart-btn" aria-label="Restart"><span class="btn-shine"></span><span class="btn-main">RESTART RUN</span><span class="btn-key">ENTER</span></button>
+          <div class="panel-actions">
+            <button class="btn btn-ghost" id="over-menu-btn">MAIN MENU</button>
+            <button class="btn btn-ghost" data-mute>TOGGLE SOUND</button>
+          </div>
+          <div class="panel-footer-row">
+            <span class="panel-code" id="run-code">RUN ID // 000000</span>
+            <span class="panel-code">BEST <b id="over-best">0000000</b></span>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <div class="boot-flash" id="boot-flash" aria-hidden="true"></div>
+    <div class="launch-flash" id="launch-flash" aria-hidden="true"><span>GO</span></div>
+
+    <div id="touch-controls" aria-hidden="true">
+      <div class="touch-steer">
+        <button class="touch-btn" id="touch-left" aria-label="Steer left"><svg viewBox="0 0 24 24"><path d="M15 5 8 12l7 7"/></svg></button>
+        <button class="touch-btn" id="touch-right" aria-label="Steer right"><svg viewBox="0 0 24 24"><path d="m9 5 7 7-7 7"/></svg></button>
+      </div>
+      <button class="touch-nitro" id="touch-nitro" aria-label="Nitro"><span class="touch-nitro-ring"></span><span>NITRO</span></button>
+    </div>
+  </main>
+
+  <noscript>NEON OVERDRIVE needs JavaScript enabled to run.</noscript>
+  <script type="module" src="./src/main.js"></script>
+</body>
+</html>
