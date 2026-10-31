@@ -1,0 +1,265 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+  <meta name="theme-color" content="#05060a">
+  <meta name="description" content="Shadow Ninja — a cinematic 2D action game under the blood moon.">
+  <title>Shadow Ninja — Blood Moon</title>
+  <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <main id="game" class="game" aria-label="Shadow Ninja game">
+    <canvas id="scene" aria-label="Moonlit shrine courtyard"></canvas>
+    <div class="scene-grade" aria-hidden="true"></div>
+    <div class="scene-grain" aria-hidden="true"></div>
+
+    <!-- HUD -->
+    <section id="hud" class="hud is-hidden" aria-label="Game status">
+      <div class="hud-top">
+        <div class="brand-mini">
+          <span class="brand-seal" aria-hidden="true">影</span>
+          <span class="brand-copy">
+            <b>SHADOW NINJA</b>
+            <small>BLOOD MOON</small>
+          </span>
+        </div>
+
+        <div class="wave-info" id="waveInfo">
+          <span class="wave-kicker">WAVE <b id="waveNo">I</b></span>
+          <strong id="waveName">ASHES AT THE GATE</strong>
+          <span class="wave-rule" aria-hidden="true"></span>
+          <small><span id="enemyCount">3</span> HOSTILES REMAIN</small>
+        </div>
+
+        <div class="hud-right">
+          <div class="score-block">
+            <span>SCORE</span>
+            <b id="score">000000</b>
+          </div>
+          <div class="hud-actions">
+            <button id="soundBtn" class="icon-btn" type="button" aria-label="Mute sound" title="Mute (M)">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9h4l5-4v14l-5-4H4zM17 8.5c1.2 1 1.9 2.2 1.9 3.5s-.7 2.5-1.9 3.5M19.5 5.6C21.4 7.2 22.5 9.5 22.5 12s-1.1 4.8-3 6.4"/></svg>
+            </button>
+            <button id="pauseBtn" class="icon-btn" type="button" aria-label="Pause game" title="Pause (Esc)">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14M16 5v14"/></svg>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div class="vitals" aria-label="Player vitality">
+        <div class="vital-heading"><span>VITALITY</span><b id="hpText">100</b></div>
+        <div class="health-track">
+          <div id="hpLag" class="health-lag"></div>
+          <div id="hpFill" class="health-fill"></div>
+          <div class="health-ticks" aria-hidden="true"></div>
+        </div>
+        <div class="shadow-track" title="Shadow energy">
+          <div id="shadowFill" class="shadow-fill"></div>
+          <span id="shadowLabel">SHADOW</span>
+        </div>
+      </div>
+
+      <div id="combo" class="combo" aria-live="polite">
+        <div class="combo-number" id="comboNum">0</div>
+        <div class="combo-copy"><b>HIT</b><span>COMBO</span></div>
+        <div class="combo-meter"><i id="comboMeter"></i></div>
+      </div>
+
+      <div id="waveBanner" class="wave-banner" aria-live="polite">
+        <span id="bannerKicker">WAVE I</span>
+        <strong id="bannerTitle">ASHES AT THE GATE</strong>
+        <em id="bannerSub">They came for the shrine. They found the dark.</em>
+      </div>
+
+      <div id="bossBar" class="boss-bar is-hidden" aria-label="Boss health">
+        <div class="boss-name"><span>ONI SHOGUN</span><b>KUROGANE</b></div>
+        <div class="boss-track"><i id="bossFill"></i></div>
+      </div>
+
+      <div id="toast" class="toast" aria-live="polite"></div>
+
+      <div id="tutorial" class="tutorial">
+        <span class="tutorial-mark">道</span>
+        <div class="tutorial-copy">
+          <b>MOVE LIKE SMOKE</b>
+          <span id="tutorialText"><kbd>WASD</kbd> move <i>·</i> <kbd>J</kbd> slash <i>·</i> <kbd>K</kbd> dash <i>·</i> <kbd>L</kbd> shuriken <i>·</i> <kbd>E</kbd> shadow art</span>
+        </div>
+      </div>
+
+      <div id="pulsePrompt" class="pulse-prompt" aria-hidden="true"><span></span>PERFECT DODGE</div>
+    </section>
+
+    <!-- Mobile controls -->
+    <section id="touchControls" class="touch-controls is-hidden" aria-label="Touch controls">
+      <div id="joystick" class="joystick" role="group" aria-label="Movement joystick">
+        <div class="joystick-base" aria-hidden="true">
+          <i class="joy-ring"></i><i class="joy-cross"></i>
+        </div>
+        <div id="joystickKnob" class="joystick-knob" aria-hidden="true"><i></i></div>
+      </div>
+      <div class="action-cluster">
+        <button class="action-btn shadow-action" type="button" data-act="special" aria-label="Shadow art">
+          <svg viewBox="0 0 32 32" aria-hidden="true"><path d="M16 3l3.1 8.5L28 9l-5.2 7.1L29 21l-9 .3L16 29l-3.4-7.6L4 20l6.3-4.8L5 8l8.7 2.8z"/></svg>
+          <span>SHADOW</span>
+        </button>
+        <button class="action-btn kunai-action" type="button" data-act="kunai" aria-label="Throw shuriken">
+          <svg viewBox="0 0 32 32" aria-hidden="true"><path d="M16 3l3.3 9.2L29 9l-6.2 7L29 23l-9.7-3.2L16 29l-3.3-9.2L3 23l6.2-7L3 9l9.7 3.2z"/></svg>
+          <span>KUNAI</span>
+        </button>
+        <button class="action-btn dash-action" type="button" data-act="dash" aria-label="Dash">
+          <svg viewBox="0 0 32 32" aria-hidden="true"><path d="M5 7l11 9L5 25M16 7l11 9-11 9"/></svg>
+          <span>DASH</span>
+        </button>
+        <button class="action-btn attack-action" type="button" data-act="attack" aria-label="Slash">
+          <svg viewBox="0 0 32 32" aria-hidden="true"><path d="M6 27L24 5l2 2-9 21zM8 24l-3 2 1-5"/></svg>
+          <span>SLASH</span>
+        </button>
+      </div>
+    </section>
+
+    <!-- Title -->
+    <section id="titleScreen" class="screen title-screen" aria-labelledby="gameTitle">
+      <div class="title-top">
+        <div class="title-mark"><span>影</span><i></i><b>A KAGE LEGEND</b></div>
+        <div class="title-best"><span>BEST WAVE</span><b id="titleBest">—</b></div>
+      </div>
+
+      <div class="title-content">
+        <p class="eyebrow"><i></i> A BLOOD MOON TALE</p>
+        <h1 id="gameTitle"><span class="title-shadow">SHADOW</span><span class="title-ninja">NINJA</span></h1>
+        <div class="title-rule"><i></i><span>斬</span><i></i></div>
+        <p class="title-blurb">One blade. A courtyard full of ghosts.<br>Become the thing they fear in the dark.</p>
+        <div class="title-actions">
+          <button id="playBtn" class="btn btn-primary" type="button" aria-label="Play"><span class="play-glyph">▶</span><span>Play</span></button>
+          <button id="howBtn" class="btn btn-ghost" type="button">How to play</button>
+        </div>
+        <div class="title-meta">
+          <span><i class="dot"></i> 5 WAVES</span>
+          <span>ONE ONI SHOGUN</span>
+          <span>KEYBOARD + TOUCH</span>
+        </div>
+      </div>
+
+      <div class="title-side" aria-hidden="true">
+        <span class="vertical-jp">月下の影</span>
+        <span class="vertical-line"></span>
+        <span class="vertical-en">THE MOON<br>REMEMBERS<br>EVERY BLADE</span>
+      </div>
+
+      <div class="title-bottom">
+        <span>© KAGE STUDIO</span>
+        <span class="title-bottom-center"> headphones recommended </span>
+        <button id="titleSound" class="text-sound" type="button" aria-label="Toggle sound">SOUND: ON</button>
+      </div>
+    </section>
+
+    <!-- How to play -->
+    <section id="howScreen" class="screen modal-screen is-hidden" aria-labelledby="howTitle">
+      <div class="modal-panel how-panel">
+        <button class="modal-close" type="button" data-close="howScreen" aria-label="Close">×</button>
+        <p class="eyebrow"><i></i> THE WAY OF THE SHADOW</p>
+        <h2 id="howTitle">SURVIVE THE NIGHT</h2>
+        <div class="how-grid">
+          <div class="how-card">
+            <span class="how-num">01</span>
+            <b>STRIKE</b>
+            <p>Chain three slashes for a wide finisher. Every clean hit builds <em>Shadow</em>.</p>
+            <div class="keys"><kbd>J</kbd><kbd>SPACE</kbd><span>or</span><span class="touch-chip">SLASH</span></div>
+          </div>
+          <div class="how-card">
+            <span class="how-num">02</span>
+            <b>VANISH</b>
+            <p>Dash through danger. A perfectly timed dodge bends time and rewards <em>+25 Shadow</em>.</p>
+            <div class="keys"><kbd>K</kbd><kbd>SHIFT</kbd><span>or</span><span class="touch-chip">DASH</span></div>
+          </div>
+          <div class="how-card">
+            <span class="how-num">03</span>
+            <b>THROW</b>
+            <p>Interrupt archers and finish runners with a spinning shuriken.</p>
+            <div class="keys"><kbd>L</kbd><span>or</span><span class="touch-chip">KUNAI</span></div>
+          </div>
+          <div class="how-card">
+            <span class="how-num">04</span>
+            <b>UNLEASH</b>
+            <p>At full Shadow, tear through every enemy in a blur of afterimages.</p>
+            <div class="keys"><kbd>E</kbd><span>or</span><span class="touch-chip">SHADOW</span></div>
+          </div>
+        </div>
+        <div class="how-tip"><span>師</span><p><b>MASTER'S NOTE</b> Watch the red glint. Every attack can be read, and every attack can be dodged.</p></div>
+        <button class="btn btn-primary how-go" type="button" data-start>BEGIN THE HUNT</button>
+      </div>
+    </section>
+
+    <!-- Pause -->
+    <section id="pauseScreen" class="screen modal-screen is-hidden" aria-labelledby="pauseTitle">
+      <div class="modal-panel pause-panel">
+        <p class="eyebrow"><i></i> THE WORLD HOLDS ITS BREATH</p>
+        <h2 id="pauseTitle">PAUSED</h2>
+        <p class="pause-sub">The moon waits for no one.</p>
+        <div class="modal-actions">
+          <button id="resumeBtn" class="btn btn-primary" type="button">Resume</button>
+          <button id="restartPauseBtn" class="btn btn-ghost" type="button">Restart run</button>
+        </div>
+        <div class="pause-stats">
+          <div><span>WAVE</span><b id="pauseWave">I</b></div>
+          <div><span>SCORE</span><b id="pauseScore">0</b></div>
+          <div><span>BEST COMBO</span><b id="pauseCombo">0</b></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Game over -->
+    <section id="overScreen" class="screen modal-screen is-hidden" aria-labelledby="overTitle">
+      <div class="modal-panel over-panel">
+        <p class="eyebrow blood"><i></i> THE MOON CLAIMS ANOTHER</p>
+        <h2 id="overTitle">YOU FELL</h2>
+        <p class="over-sub">But the shadow remembers.</p>
+        <div class="over-stats">
+          <div><span>WAVE REACHED</span><b id="overWave">I</b></div>
+          <div><span>FINAL SCORE</span><b id="overScore">0</b></div>
+          <div><span>BEST COMBO</span><b id="overCombo">0</b></div>
+        </div>
+        <p class="new-best is-hidden" id="newBest">◆ A NEW BEST ◆</p>
+        <div class="modal-actions">
+          <button id="retryBtn" class="btn btn-primary" type="button">Rise again</button>
+          <button id="overTitleBtn" class="btn btn-ghost" type="button">Title screen</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Victory -->
+    <section id="winScreen" class="screen modal-screen win-screen is-hidden" aria-labelledby="winTitle">
+      <div class="modal-panel win-panel">
+        <p class="eyebrow gold"><i></i> THE SHRINE IS SILENT</p>
+        <h2 id="winTitle">THE NIGHT<br>IS YOURS</h2>
+        <p class="win-sub">Kurogane falls. The blood moon dims.<br>Somewhere beyond the gate, another shadow waits.</p>
+        <div class="win-stats">
+          <div><span>SCORE</span><b id="winScore">0</b></div>
+          <div><span>BEST COMBO</span><b id="winCombo">0</b></div>
+          <div><span>TIME</span><b id="winTime">0:00</b></div>
+        </div>
+        <p class="new-best is-hidden" id="winBest">◆ A NEW BEST ◆</p>
+        <div class="modal-actions">
+          <button id="againBtn" class="btn btn-primary" type="button">Walk the path again</button>
+          <button id="winTitleBtn" class="btn btn-ghost" type="button">Title screen</button>
+        </div>
+      </div>
+    </section>
+
+    <div id="flash" class="flash" aria-hidden="true"></div>
+    <div id="slowVignette" class="slow-vignette" aria-hidden="true"></div>
+    <div class="vignette" aria-hidden="true"></div>
+    <div id="rotateHint" class="rotate-hint">Rotate for a wider blade</div>
+    <noscript><p class="noscript">Shadow Ninja needs JavaScript to draw the night.</p></noscript>
+  </main>
+  <script src="js/core.js"></script>
+  <script src="js/world.js"></script>
+  <script src="js/fx.js"></script>
+  <script src="js/art.js"></script>
+  <script src="js/combat.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
