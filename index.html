@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <link rel="icon" href="data:,">
+  <title>LAST KINGDOM – Tower Defense</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <div id="game-root">
+    <div id="stage">
+      <canvas id="game"></canvas>
+
+      <div id="menu-screen">
+        <div class="panel">
+          <h1 class="game-title">LAST<br>KINGDOM</h1>
+          <p class="tagline">Defend the realm. Survive the night.</p>
+          <div id="map-options">
+            <button class="map-option" data-map="fords">
+              <div class="map-name">The Fords</div>
+              <div class="map-tag">A narrow crossing beside the rushing river.</div>
+            </button>
+            <button class="map-option" data-map="forest">
+              <div class="map-name">The Old Forest</div>
+              <div class="map-tag">Roots and fog swallow the old roads.</div>
+            </button>
+            <button class="map-option" data-map="citadel">
+              <div class="map-name">The Black Citadel</div>
+              <div class="map-tag">The dark keep rises at the heart of the land.</div>
+            </button>
+          </div>
+          <button id="start-btn" class="btn primary">⚔ BEGIN THE CAMPAIGN</button>
+          <div class="howto">
+            <div>🏹 Archer · 🛡️ Spear Guard · 🔥 Flame Acolyte · 🎯 Ballista</div>
+            <div>Build towers, earn gold, survive 12 waves.</div>
+            <div>Bosses guard the final roads. The Last King awaits.</div>
+          </div>
+        </div>
+      </div>
+
+      <div id="treasury-screen">
+        <div class="panel">
+          <h2 class="panel-title">Wave <span id="treasury-wave">1</span> Cleared!</h2>
+          <p class="gold-line">Gold in the treasury: <b id="treasury-gold">150</b></p>
+          <div id="upgrade-options"></div>
+          <button id="continue-btn" class="btn primary">Continue to Wave <span id="treasury-next">2</span></button>
+        </div>
+      </div>
+
+      <div id="victory-screen">
+        <div class="panel">
+          <h1 class="game-title small">THE LAST<br>KINGDOM REJOICES!</h1>
+          <div class="stats">
+            <div>Waves Survived: <b id="v-stats-waves">0</b></div>
+            <div>Kills: <b id="v-stats-kills">0</b></div>
+            <div>Gold Earned: <b id="v-stats-gold">0</b></div>
+            <div>Time: <b id="v-stats-time">0s</b></div>
+          </div>
+          <button id="victory-restart-btn" class="btn primary">⚔ Play Again</button>
+          <button id="menu-btn" class="btn">Change Map</button>
+        </div>
+      </div>
+
+      <div id="defeat-screen">
+        <div class="panel">
+          <h1 class="game-title small fall">THE KINGDOM<br>HAS FALLEN</h1>
+          <div class="stats">
+            <div>Waves Survived: <b id="d-stats-waves">0</b></div>
+            <div>Kills: <b id="d-stats-kills">0</b></div>
+            <div>Gold Earned: <b id="d-stats-gold">0</b></div>
+            <div>Time: <b id="d-stats-time">0s</b></div>
+          </div>
+          <button id="defeat-restart-btn" class="btn primary">⚔ Rise Again</button>
+          <button id="menu-btn" class="btn">Change Map</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="tower-bar">
+      <button class="tower-btn" data-type="archer">
+        <span class="ticon">🏹</span>
+        <span class="tname">Archer</span>
+        <span class="tcost">60</span>
+        <span class="tlevel">Lv. 1</span>
+      </button>
+      <button class="tower-btn" data-type="spear">
+        <span class="ticon">🛡️</span>
+        <span class="tname">Spear Guard</span>
+        <span class="tcost">50</span>
+        <span class="tlevel">Lv. 1</span>
+      </button>
+      <button class="tower-btn" data-type="mage">
+        <span class="ticon">🔥</span>
+        <span class="tname">Flame Acolyte</span>
+        <span class="tcost">90</span>
+        <span class="tlevel">Lv. 1</span>
+      </button>
+      <button class="tower-btn" data-type="ballista">
+        <span class="ticon">🎯</span>
+        <span class="tname">Ballista</span>
+        <span class="tcost">140</span>
+        <span class="tlevel">Lv. 1</span>
+      </button>
+    </div>
+  </div>
+
+  <script src="js/data.js"></script>
+  <script src="js/engine.js"></script>
+  <script src="js/game.js"></script>
+</body>
+</html>
