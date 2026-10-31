@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#04060c" />
+  <meta name="color-scheme" content="dark" />
+  <title>Borrowed Seconds — a chrono-combat trial</title>
+  <meta name="description" content="A twin-stick chrono-combat trial. Steal time to overclock your shards, but every second you borrow returns as a collector from the future." />
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23070c14'/%3E%3Ccircle cx='32' cy='32' r='19' fill='none' stroke='%236ff7f0' stroke-width='3'/%3E%3Cpath d='M32 17v16l11 7' fill='none' stroke='%23ff5d7a' stroke-width='4' stroke-linecap='round'/%3E%3C/svg%3E" />
+  <link rel="stylesheet" href="./styles.css" />
+</head>
+<body>
+  <main id="stage">
+    <canvas id="arena" aria-label="Borrowed Seconds combat arena"></canvas>
+
+    <div id="slowwash" class="slow-wash" aria-hidden="true"></div>
+    <div id="damagewash" class="damage-wash" aria-hidden="true"></div>
+
+    <header id="hud" class="hud is-hidden">
+      <section class="panel vitals">
+        <div class="panel-top">
+          <span class="eyebrow">VITAL</span>
+          <span id="hpnum" class="mono hpnum">100</span>
+        </div>
+        <div class="hp-track" aria-hidden="true">
+          <div id="hpfill" class="hp-fill"></div>
+          <i class="hp-ticks"></i>
+        </div>
+        <div class="wave-line">
+          <span class="eyebrow">WAVE</span>
+          <span id="wavenum" class="mono wavenum">01</span>
+          <span id="wavesub" class="wave-sub">THE PRESENT</span>
+        </div>
+      </section>
+
+      <section class="panel future">
+        <div class="panel-top">
+          <span class="eyebrow debt-eyebrow"><i class="dot"></i>FUTURE DEBT</span>
+          <span id="debtlabel" class="mono debt-label">CLEAR</span>
+        </div>
+        <div id="timeline" class="timeline" aria-hidden="true">
+          <div class="timeline-rail"></div>
+          <div class="now-mark"></div>
+          <div id="motes" class="motes"></div>
+          <span class="future-edge">+9s</span>
+        </div>
+        <div class="timeline-caption">
+          <span>NOW</span>
+          <span id="debtcaption">EVERY SECOND YOU STEAL ARRIVES HERE</span>
+        </div>
+      </section>
+
+      <section class="panel run">
+        <div class="score-block">
+          <span class="eyebrow">SCORE</span>
+          <span id="score" class="mono score">0</span>
+        </div>
+        <div class="run-sub">
+          <span class="stolen">STOLEN <b id="stolen" class="mono">0.0</b><i>s</i></span>
+        </div>
+        <div class="run-buttons">
+          <button id="btn-audio" class="icon-btn" type="button" aria-label="Mute audio" title="Mute (M)">
+            <span class="audio-glyph">◉</span>
+          </button>
+          <button id="btn-pause" class="icon-btn" type="button" aria-label="Pause" title="Pause (P)">
+            <span aria-hidden="true">❚❚</span>
+          </button>
+        </div>
+      </section>
+    </header>
+
+    <div id="bossbar" class="bossbar is-hidden">
+      <div class="boss-head">
+        <span class="eyebrow">THE AUDITOR</span>
+        <span id="bossphase" class="mono boss-phase">PHASE I</span>
+      </div>
+      <div class="boss-track"><i id="bossfill"></i></div>
+      <div class="boss-sub">IT COLLECTS WHAT YOU OWE</div>
+    </div>
+
+    <div id="banner" class="banner" aria-live="polite">
+      <span id="banner-title" class="banner-title"></span>
+      <span id="banner-sub" class="banner-sub"></span>
+    </div>
+
+    <div id="combo" class="combo is-hidden" aria-hidden="true">
+      <span id="combomult" class="mono">×1.2</span>
+      <small>CHAIN</small>
+    </div>
+
+    <div id="toasts" class="toasts" aria-live="polite"></div>
+
+    <div id="hint" class="hint is-hidden">
+      <span><kbd>SHIFT</kbd> steal time</span>
+      <span><kbd>SPACE</kbd> blink</span>
+      <span><kbd>P</kbd> pause</span>
+    </div>
+
+    <div id="touch" class="touch is-hidden">
+      <button id="btn-slow" class="ability slow" type="button" aria-label="Hold to steal time">
+        <span>TIME</span><small>HOLD</small>
+      </button>
+      <button id="btn-dash" class="ability dash" type="button" aria-label="Blink dash">
+        <span>BLINK</span><small>READY</small>
+      </button>
+    </div>
+
+    <section id="title" class="overlay title-screen" aria-label="Borrowed Seconds title screen">
+      <div class="title-inner">
+        <p class="kicker"><span class="kicker-line"></span>A CHRONO-COMBAT TRIAL<span class="kicker-line"></span></p>
+        <h1 class="logo">
+          <span class="logo-borrowed">BORROWED</span>
+          <span class="logo-seconds" data-text="SECONDS">SECONDS</span>
+        </h1>
+        <p class="tagline">Every second you steal comes back to collect.</p>
+
+        <div class="mechanics">
+          <article class="mech">
+            <span class="mech-num">01</span>
+            <div>
+              <h2>BORROW</h2>
+              <p>Hold <kbd>Shift</kbd> to slow the world. Your shards burn hotter.</p>
+            </div>
+          </article>
+          <article class="mech">
+            <span class="mech-num">02</span>
+            <div>
+              <h2>DEBT</h2>
+              <p>Every stolen second is logged on your future timeline.</p>
+            </div>
+          </article>
+          <article class="mech">
+            <span class="mech-num">03</span>
+            <div>
+              <h2>COLLECT</h2>
+              <p>When a second lands, the future sends a collector to take it back.</p>
+            </div>
+          </article>
+        </div>
+
+        <div class="title-actions">
+          <button id="btn-play" class="play-btn" type="button" aria-label="Play">
+            <span>Play</span><i aria-hidden="true">▸</i>
+          </button>
+          <p class="best-line">BEST <b id="best-score" class="mono">0</b></p>
+        </div>
+
+        <div class="title-foot">
+          <span class="desktop-only">WASD MOVE · MOUSE AIM · CLICK FIRE · SPACE BLINK · SHIFT STEAL · P PAUSE</span>
+          <span class="touch-only">TWIN-STICK TOUCH · TIME AND BLINK AT YOUR THUMBS</span>
+          <span class="title-version">LOOP 01</span>
+        </div>
+      </div>
+    </section>
+
+    <section id="pause" class="overlay modal-layer is-hidden" aria-label="Paused">
+      <div class="modal">
+        <p class="modal-kicker">TEMPORAL HOLD</p>
+        <h2 class="modal-title">TIME HELD</h2>
+        <p class="modal-copy">The arena is waiting. So is your debt.</p>
+        <div class="modal-actions">
+          <button id="btn-resume" class="btn primary" type="button">Resume</button>
+          <button id="btn-pause-mute" class="btn ghost" type="button">Sound: On</button>
+          <button id="btn-quit" class="btn ghost" type="button">Quit to title</button>
+        </div>
+        <p class="modal-foot"><kbd>P</kbd> resumes · <kbd>Esc</kbd> resumes</p>
+      </div>
+    </section>
+
+    <section id="gameover" class="overlay modal-layer is-hidden" aria-label="Run finished">
+      <div class="modal endcard">
+        <p id="end-kicker" class="modal-kicker">DEBT COLLECTED</p>
+        <h2 id="end-title" class="modal-title end-title">THE FUTURE<br />COLLECTED</h2>
+        <p id="end-copy" class="modal-copy">You borrowed 0.0 seconds. The future took the rest.</p>
+        <div class="stats">
+          <div><span class="eyebrow">SURVIVED</span><b id="stat-time" class="mono">0:00</b></div>
+          <div><span class="eyebrow">WAVE</span><b id="stat-wave" class="mono">01</b></div>
+          <div><span class="eyebrow">BORROWED</span><b id="stat-debt" class="mono">0.0s</b></div>
+          <div><span class="eyebrow">COLLECTORS</span><b id="stat-collectors" class="mono">0</b></div>
+          <div><span class="eyebrow">SCORE</span><b id="stat-score" class="mono">0</b></div>
+          <div><span class="eyebrow">BEST</span><b id="stat-best" class="mono">0</b></div>
+        </div>
+        <p id="end-best" class="new-best is-hidden">NEW BEST — THE FUTURE NOTED YOUR NAME</p>
+        <div class="modal-actions">
+          <button id="btn-again" class="btn primary" type="button">Play Again</button>
+          <button id="btn-title" class="btn ghost" type="button">Title</button>
+        </div>
+      </div>
+    </section>
+
+    <noscript>
+      <div class="noscript">Borrowed Seconds needs JavaScript to run. Enable it and reload.</div>
+    </noscript>
+  </main>
+
+  <script type="module" src="./js/main.js"></script>
+</body>
+</html>
