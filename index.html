@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#08161d">
+  <meta name="description" content="MONSTER MERGE — collect 20 creatures, merge matching monsters, evolve them and battle through the Eclipse Throne.">
+  <title>MONSTER MERGE — Evolution Battle</title>
+  <link rel="icon" href="./assets/icon.svg" type="image/svg+xml">
+  <link rel="preload" href="./assets/fonts/baloo2-latin.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="./assets/fonts/nunito-latin.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="./styles.css">
+</head>
+<body>
+  <div class="app" id="app">
+    <div class="world-bg" aria-hidden="true">
+      <div class="world-stars"></div>
+      <div class="world-glow world-glow-a"></div>
+      <div class="world-glow world-glow-b"></div>
+      <div class="world-glow world-glow-c"></div>
+      <div class="world-motes" id="world-motes"></div>
+      <div class="world-hills"></div>
+    </div>
+
+    <header class="topbar">
+      <button class="brand" data-view="home" aria-label="Monster Merge home">
+        <span class="brand-mark" aria-hidden="true">
+          <svg viewBox="0 0 64 64">
+            <defs>
+              <linearGradient id="brandGrad" x1="0" y1="0" x2="1" y2="1">
+                <stop offset="0" stop-color="#9dffcf"/><stop offset=".55" stop-color="#42e8c6"/><stop offset="1" stop-color="#1f8fb0"/>
+              </linearGradient>
+              <linearGradient id="brandGold" x1="0" y1="0" x2="1" y2="1">
+                <stop offset="0" stop-color="#fff3c4"/><stop offset="1" stop-color="#ffb84d"/>
+              </linearGradient>
+            </defs>
+            <path d="M32 3 58 18v28L32 61 6 46V18Z" fill="#0a1c26" stroke="url(#brandGold)" stroke-width="2"/>
+            <path d="M20 45c-7-9-2-22 8-23 7-1 9 4 9 4s3-7 10-5c8 2 10 12 4 19-6 8-17 11-24 6Z" fill="url(#brandGrad)"/>
+            <path d="M24 21c0-6 2-11 6-14 1 5 5 8 8 8 0-5 3-8 7-9-2 6-2 10 0 13" fill="none" stroke="#ffb84d" stroke-width="2.5" stroke-linecap="round"/>
+            <circle cx="35" cy="35" r="2.7" fill="#07131b"/><circle cx="46" cy="35" r="2.7" fill="#07131b"/>
+            <circle cx="35.8" cy="34" r="1" fill="#fff"/><circle cx="46.8" cy="34" r="1" fill="#fff"/>
+          </svg>
+        </span>
+        <span class="brand-text">
+          <strong>MONSTER<span>MERGE</span></strong>
+          <small>EVOLUTION BATTLE</small>
+        </span>
+      </button>
+
+      <nav class="main-nav" aria-label="Main navigation">
+        <button class="nav-link" data-view="home">Home</button>
+        <button class="nav-link" data-view="collection">Monsters</button>
+        <button class="nav-link" data-view="merge">Merge Lab</button>
+        <button class="nav-link" data-view="battle">Adventure</button>
+        <button class="nav-link" data-view="nest">Nest</button>
+      </nav>
+
+      <div class="top-actions">
+        <div class="wallet" aria-label="Resources">
+          <span class="currency" id="coin-pill"><span class="coin-icon" aria-hidden="true"></span><b data-coins>0</b></span>
+          <span class="currency gem" id="gem-pill"><span class="gem-icon" aria-hidden="true"></span><b data-gems>0</b></span>
+        </div>
+        <button class="icon-btn" id="sound-btn" aria-label="Toggle sound" title="Toggle sound">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path class="sound-wave" d="M4 9v6h4l5 4V5L8 9H4z"/><path class="sound-arc" d="M16 8.5a5 5 0 0 1 0 7M18.8 5.5a9 9 0 0 1 0 13" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><path class="sound-x" d="M16 9l5 6M21 9l-5 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+        </button>
+        <button class="icon-btn" id="help-btn" aria-label="How to play" title="How to play">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M9.6 9.2a2.6 2.6 0 1 1 3.4 2.5c-.8.3-1 .8-1 1.6" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><circle cx="12" cy="17" r="1.2" fill="currentColor"/></svg>
+        </button>
+      </div>
+    </header>
+
+    <main id="view-root" class="view-root" tabindex="-1"></main>
+
+    <nav class="bottom-nav" aria-label="Main navigation">
+      <button class="bottom-link" data-view="home">
+        <span class="bn-icon"><svg viewBox="0 0 24 24"><path d="M4 11.5 12 4l8 7.5" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"/><path d="M6.5 10.5V20h11v-9.5" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linejoin="round"/><path d="M10 20v-5h4v5" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linejoin="round"/></svg></span>
+        <span>Home</span>
+      </button>
+      <button class="bottom-link" data-view="collection">
+        <span class="bn-icon"><svg viewBox="0 0 24 24"><rect x="3.2" y="3.2" width="7.2" height="7.2" rx="2" fill="none" stroke="currentColor" stroke-width="1.9"/><rect x="13.6" y="3.2" width="7.2" height="7.2" rx="2" fill="none" stroke="currentColor" stroke-width="1.9"/><rect x="3.2" y="13.6" width="7.2" height="7.2" rx="2" fill="none" stroke="currentColor" stroke-width="1.9"/><rect x="13.6" y="13.6" width="7.2" height="7.2" rx="2" fill="none" stroke="currentColor" stroke-width="1.9"/></svg></span>
+        <span>Monsters</span>
+      </button>
+      <button class="bottom-link bottom-link-main" data-view="merge">
+        <span class="bn-icon bn-spark"><svg viewBox="0 0 24 24"><path d="M12 2.5 14.2 9l6.5 2.2-6.5 2.2L12 20l-2.2-6.6L3.3 11.2 9.8 9Z" fill="currentColor"/><circle cx="19" cy="5.5" r="1.7" fill="currentColor" opacity=".7"/><circle cx="5" cy="18" r="1.3" fill="currentColor" opacity=".7"/></svg></span>
+        <span>Merge</span>
+      </button>
+      <button class="bottom-link" data-view="battle">
+        <span class="bn-icon"><svg viewBox="0 0 24 24"><path d="M5 19 16.5 7.5M14 4l6 6-2 2-6-6Z" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/><path d="M4 20l-1 1M17 4l3-3M7 14l3 3M19 19l1 1" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/></svg></span>
+        <span>Battle</span>
+      </button>
+      <button class="bottom-link" data-view="nest">
+        <span class="bn-icon"><svg viewBox="0 0 24 24"><path d="M12 3c4.5 0 7 5.5 7 9.3C19 16.8 16 20 12 20s-7-3.2-7-7.7C5 8.5 7.5 3 12 3Z" fill="none" stroke="currentColor" stroke-width="1.9"/><path d="M9 11.5c.8-2 1.8-3.4 3-4.5M15 13.5c-.6 2-1.6 3.4-3 4.4" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" opacity=".7"/></svg></span>
+        <span>Nest</span>
+      </button>
+    </nav>
+  </div>
+
+  <div id="modal-root"></div>
+  <div id="toast-root" class="toast-root" aria-live="polite"></div>
+  <div id="fx-root" class="fx-root" aria-hidden="true"></div>
+
+  <noscript><div class="noscript">MONSTER MERGE needs JavaScript to hatch.</div></noscript>
+  <script type="module" src="./src/app.js"></script>
+</body>
+</html>
