@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+<meta name="theme-color" content="#0b0d0c" />
+<title>The World Remembers — a survival chronicle</title>
+<meta name="description" content="An open-world survival game where the valley remembers every choice. NPCs adapt, enemies learn your strategies, and no two playthroughs are the same." />
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%230b0d0c'/%3E%3Cpath d='M16 4 L20 16 L16 28 L12 16 Z' fill='%23e3b46b'/%3E%3C/svg%3E" />
+<link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+<div id="app">
+  <canvas id="game" aria-label="Game world"></canvas>
+  <div id="vignette"></div>
+  <div id="grain"></div>
+
+  <!-- HUD -->
+  <div id="hud" class="hidden" aria-live="polite">
+    <div class="hud-top">
+      <div class="status panel">
+        <div class="status-head">
+          <span class="status-name">WANDERER</span>
+          <span class="cycle-tag" id="cycle-tag">CYCLE I</span>
+        </div>
+        <div class="stat">
+          <span class="stat-label">LIFE</span>
+          <div class="track hp"><i id="bar-hp"></i></div>
+          <span class="stat-val" id="hp-text">100</span>
+        </div>
+        <div class="stat">
+          <span class="stat-label">HUNGER</span>
+          <div class="track hunger"><i id="bar-hunger"></i></div>
+          <span class="stat-val" id="hunger-text">100</span>
+        </div>
+        <div class="stat">
+          <span class="stat-label">WIND</span>
+          <div class="track stamina"><i id="bar-stamina"></i></div>
+          <span class="stat-val" id="stamina-text">100</span>
+        </div>
+      </div>
+
+      <div class="clock">
+        <div class="clock-day" id="day-label">DAY 1</div>
+        <div class="clock-phase" id="phase-label">DAWN</div>
+        <div class="clock-track"><i id="clock-fill"></i><b id="clock-mark"></b></div>
+        <div class="adapt" id="adapt">
+          <span>THE VALLEY IS LEARNING</span>
+          <div class="adapt-track"><i id="adapt-fill"></i></div>
+        </div>
+      </div>
+
+      <div class="right-stack">
+        <div class="objective panel">
+          <div class="eyebrow">KINDLE THE BEACON</div>
+          <div class="pips" id="shard-pips">
+            <span class="pip"></span><span class="pip"></span><span class="pip"></span>
+          </div>
+          <div class="objective-text" id="objective-text">Recover three ember shards from the ruins</div>
+        </div>
+        <div class="minimap-wrap">
+          <canvas id="minimap" width="160" height="160"></canvas>
+          <span class="compass n">N</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="hud-bottom">
+      <div class="inv panel" id="inventory"></div>
+      <div class="hint-row" id="hint-row">
+        <span><b>WASD</b> move</span><span><b>SHIFT</b> sprint</span><span><b>CLICK</b> strike</span><span><b>SPACE</b> dodge</span><span><b>E</b> use</span><span><b>C</b> craft</span><span><b>M</b> memory</span>
+      </div>
+      <div class="weapons panel" id="weapons"></div>
+    </div>
+
+    <div id="prompt" class="prompt hidden"></div>
+    <div id="toasts" class="toasts"></div>
+    <button id="btn-mute" class="icon-btn mute" title="Toggle sound" aria-label="Toggle sound">♪</button>
+    <button id="btn-memory" class="icon-btn mem" title="World memory (M)" aria-label="World memory">✦</button>
+  </div>
+
+  <!-- Touch controls -->
+  <div id="touch" class="hidden">
+    <div id="stick" class="stick"><i id="stick-knob"></i></div>
+    <div class="touch-buttons">
+      <button class="tbtn attack" data-touch="attack">STRIKE</button>
+      <button class="tbtn use" data-touch="interact">USE</button>
+      <button class="tbtn dodge" data-touch="dodge">ROLL</button>
+      <button class="tbtn small" data-touch="craft">CRAFT</button>
+      <button class="tbtn small" data-touch="memory">MEMORY</button>
+      <button class="tbtn small" data-touch="eat">EAT</button>
+    </div>
+  </div>
+
+  <!-- Title -->
+  <div id="title" class="overlay title-screen">
+    <div class="title-wrap">
+      <div class="eyebrow">A SURVIVAL CHRONICLE</div>
+      <h1>THE WORLD<br /><em>REMEMBERS</em></h1>
+      <p class="tagline">NPCs adapt. Enemies learn your strategies.<br />No two playthroughs are the same.</p>
+      <div class="title-memory" id="title-memory"></div>
+      <div class="title-actions">
+        <button id="btn-begin" class="btn primary">Enter the valley</button>
+        <button id="btn-title-memory" class="btn ghost">What the valley knows</button>
+      </div>
+      <div class="title-hint">WASD move · Mouse aim · Click strike · E interact · C craft · M memory</div>
+    </div>
+    <aside class="title-side">
+      <div class="eyebrow">THE CHRONICLE</div>
+      <div id="title-chronicle" class="chronicle-list"></div>
+    </aside>
+    <div class="title-footer"><span id="title-seed">The valley is listening.</span><span>Built for the browser · runs offline</span></div>
+  </div>
+
+  <!-- Craft -->
+  <div id="panel-craft" class="overlay panel-screen hidden">
+    <div class="sheet">
+      <header class="sheet-head">
+        <div>
+          <div class="eyebrow">MAKE DO</div>
+          <h2>Crafting</h2>
+        </div>
+        <button class="btn ghost close" data-close="panel-craft">Close · C</button>
+      </header>
+      <div id="recipe-grid" class="recipe-grid"></div>
+      <p class="sheet-note">Tools change how the valley learns you. Fire leaves a mark on the land.</p>
+    </div>
+  </div>
+
+  <!-- Memory -->
+  <div id="panel-memory" class="overlay panel-screen hidden">
+    <div class="sheet wide">
+      <header class="sheet-head">
+        <div>
+          <div class="eyebrow">PERSISTENT WORLD</div>
+          <h2>What the valley knows</h2>
+        </div>
+        <button class="btn ghost close" data-close="panel-memory">Close · M</button>
+      </header>
+      <div class="memory-grid">
+        <section>
+          <h3>Lessons it has learned</h3>
+          <div id="trait-grid" class="trait-grid"></div>
+          <h3>Your dead</h3>
+          <div id="grave-list" class="grave-list"></div>
+        </section>
+        <section>
+          <h3>The chronicle</h3>
+          <div id="memory-chronicle" class="chronicle-list tall"></div>
+          <h3>Ledger</h3>
+          <div id="memory-stats" class="stat-grid"></div>
+        </section>
+      </div>
+      <div class="memory-foot">
+        <button id="btn-forget" class="btn danger">Forget everything</button>
+        <span>Memory lives in this browser. A new cycle rewrites the valley, not the past.</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Dialogue -->
+  <div id="dialogue" class="overlay dialogue-screen hidden">
+    <div class="dialogue">
+      <div class="portrait" id="dlg-portrait">M</div>
+      <div class="dialogue-body">
+        <div class="dlg-name" id="dlg-name">Maren</div>
+        <p class="dlg-text" id="dlg-text"></p>
+        <div class="dlg-options" id="dlg-options"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Death -->
+  <div id="death" class="overlay end-screen hidden">
+    <div class="end-wrap">
+      <div class="eyebrow danger">THE VALLEY KEEPS WHAT IT TAKES</div>
+      <h1 class="end-title">You died.</h1>
+      <p class="end-cause" id="death-cause"></p>
+      <div class="learned">
+        <h3>The world learned</h3>
+        <div id="death-traits" class="trait-grid"></div>
+        <p class="end-line" id="death-line"></p>
+      </div>
+      <button id="btn-respawn" class="btn primary">Wake in the changed world</button>
+      <p class="end-hint">Your death is now a place. Your gear is still there.</p>
+    </div>
+  </div>
+
+  <!-- Victory -->
+  <div id="victory" class="overlay end-screen hidden">
+    <div class="end-wrap">
+      <div class="eyebrow">THE BEACON BURNS</div>
+      <h1 class="end-title">The valley remembers you.</h1>
+      <p class="end-cause" id="victory-text"></p>
+      <div class="learned">
+        <h3>Etched into the next cycle</h3>
+        <div id="victory-traits" class="trait-grid"></div>
+      </div>
+      <button id="btn-next-cycle" class="btn primary">Begin the next cycle</button>
+      <p class="end-hint">Every ending makes the next valley stranger.</p>
+    </div>
+  </div>
+</div>
+
+<script type="module" src="js/main.js"></script>
+</body>
+</html>
