@@ -1,0 +1,191 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+  <meta name="theme-color" content="#0b1026" />
+  <title>ASTRA: The Lost World</title>
+  <meta name="description" content="Astra: The Lost World — a 3D anime adventure across a forgotten island." />
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop stop-color='%237df9ff'/%3E%3Cstop offset='1' stop-color='%23ff9ad5'/%3E%3C/linearGradient%3E%3C/defs%3E%3Cpath fill='url(%23g)' d='M32 3l7 20 21 9-21 9-7 20-7-20-21-9 21-9z'/%3E%3C/svg%3E" />
+  <script type="module" crossorigin src="./assets/index-CQgbxZe8.js"></script>
+  <link rel="stylesheet" crossorigin href="./assets/index-sXe70QWW.css">
+</head>
+<body>
+  <canvas id="game-canvas" aria-label="Astra game world"></canvas>
+
+  <div id="loading">
+    <div class="loading-mark">✦</div>
+    <div class="loading-title">ASTRA</div>
+    <div class="loading-bar"><i></i></div>
+    <div class="loading-sub">Waking the lost world…</div>
+  </div>
+
+  <div id="title-screen">
+    <div class="title-vignette"></div>
+    <div class="title-content">
+      <div class="eyebrow"><span></span> AN ANIME ADVENTURE <span></span></div>
+      <h1 class="logo">ASTRA<span class="logo-spark">✦</span></h1>
+      <h2 class="logo-sub">THE LOST WORLD</h2>
+      <p class="title-copy">A forgotten island. A blade of starlight.<br />The Hollow King is waking.</p>
+      <div class="title-actions">
+        <button id="play-btn" class="btn btn-primary" aria-label="Play">Play <span>▶</span></button>
+        <button id="controls-btn" class="btn btn-ghost">How to Play</button>
+      </div>
+      <div class="title-chips">
+        <span>◈ Third-person combat</span>
+        <span>◈ Three quests</span>
+        <span>◈ Shadow dungeon</span>
+      </div>
+      <div class="title-foot">Keyboard + mouse · Touch controls · Headphones recommended</div>
+    </div>
+    <div class="title-side">
+      <div class="side-line"></div>
+      <div class="side-text">CHAPTER I<br /><b>THE ISLE OF ECHOES</b></div>
+    </div>
+  </div>
+
+  <div id="hud" class="hidden">
+    <div class="hud-top-left">
+      <div class="portrait">
+        <div class="portrait-art">A</div>
+        <div class="level-badge" id="level-badge">1</div>
+      </div>
+      <div class="stat-stack">
+        <div class="name-row"><span class="hero-name">ASTRA</span><span class="hero-title" id="hero-title">Wanderer</span></div>
+        <div class="bar hp"><div class="bar-fill" id="hp-fill"></div><span class="bar-label" id="hp-text">100 / 100</span></div>
+        <div class="bar mana"><div class="bar-fill" id="mana-fill"></div><span class="bar-label" id="mana-text">100 / 100</span></div>
+        <div class="bar xp"><div class="bar-fill" id="xp-fill"></div><span class="bar-label" id="xp-text">Lv 1 · 0 / 120 XP</span></div>
+      </div>
+    </div>
+
+    <div class="hud-top-right">
+      <div class="currency-row">
+        <div class="currency coin"><span class="ico">●</span><span id="coin-count">0</span></div>
+        <div class="currency crystal"><span class="ico">◆</span><span id="crystal-count">0 / 12</span></div>
+      </div>
+      <div class="minimap-wrap">
+        <canvas id="minimap" width="300" height="300"></canvas>
+        <div class="minimap-ring"></div>
+        <div class="minimap-label" id="zone-label">ISLE OF ECHOES</div>
+      </div>
+    </div>
+
+    <div class="compass" id="compass">
+      <div class="compass-arrow" id="compass-arrow">➤</div>
+      <div class="compass-text"><span id="compass-label">Dawn Crystal</span><b id="compass-dist">24m</b></div>
+    </div>
+
+    <div class="quest-tracker" id="quest-tracker">
+      <div class="quest-head"><span class="quest-star">✦</span> QUEST LOG <button id="quest-collapse" aria-label="Collapse quest log">–</button></div>
+      <div id="quest-list"></div>
+    </div>
+
+    <div class="boss-panel hidden" id="boss-panel">
+      <div class="boss-top"><span class="boss-icon">☠</span><span id="boss-name">THE HOLLOW KING</span><span class="boss-phase" id="boss-phase">I</span></div>
+      <div class="boss-bar"><div class="boss-fill" id="boss-fill"></div></div>
+      <div class="boss-sub" id="boss-sub">Ancient sovereign of the deep</div>
+    </div>
+
+    <div class="interact-prompt hidden" id="interact-prompt">
+      <span class="key">E</span><span id="interact-text">Talk</span>
+    </div>
+
+    <div class="toast-stack" id="toasts"></div>
+
+    <div class="hud-hint" id="hud-hint">
+      <span><b>WASD</b> Move</span><span><b>Shift</b> Sprint</span><span><b>Space</b> Jump</span><span><b>C</b> Dodge</span><span><b>LMB</b> Attack</span><span><b>RMB</b> Heavy</span><span><b>Q</b> Magic</span><span><b>E</b> Interact</span>
+    </div>
+
+    <div class="mobile-controls hidden" id="mobile-controls">
+      <div class="joystick" id="joystick"><div class="joystick-ring"></div><div class="joystick-knob" id="joystick-knob"></div></div>
+      <div class="mobile-buttons">
+        <button class="mbtn mbtn-interact" data-action="interact" aria-label="Interact">E</button>
+        <button class="mbtn mbtn-magic" data-action="magic" aria-label="Magic">✦</button>
+        <button class="mbtn mbtn-dodge" data-action="dodge" aria-label="Dodge">↻</button>
+        <button class="mbtn mbtn-jump" data-action="jump" aria-label="Jump">↑</button>
+        <button class="mbtn mbtn-heavy" data-action="heavy" aria-label="Heavy attack">H</button>
+        <button class="mbtn mbtn-attack" data-action="attack" aria-label="Attack">⚔</button>
+      </div>
+    </div>
+    <div class="mobile-sprint" id="mobile-sprint">SPRINT</div>
+    <div class="damage-flash" id="damage-flash"></div>
+  </div>
+
+  <div id="dialogue" class="hidden">
+    <div class="dialogue-box">
+      <div class="dialogue-portrait" id="dlg-portrait">M</div>
+      <div class="dialogue-main">
+        <div class="dialogue-name" id="dlg-name">Elder Mira</div>
+        <div class="dialogue-text" id="dlg-text"></div>
+        <div class="dialogue-actions" id="dlg-actions"></div>
+      </div>
+    </div>
+  </div>
+
+  <div id="controls-modal" class="modal hidden">
+    <div class="modal-card controls-card">
+      <h3>How to Play</h3>
+      <div class="control-grid">
+        <div><b>W A S D</b><span>Move</span></div>
+        <div><b>Mouse drag</b><span>Orbit camera</span></div>
+        <div><b>Shift</b><span>Sprint</span></div>
+        <div><b>Space</b><span>Jump</span></div>
+        <div><b>C</b><span>Dodge roll</span></div>
+        <div><b>Left click</b><span>Light combo (3 hits)</span></div>
+        <div><b>Right click</b><span>Heavy attack</span></div>
+        <div><b>Q</b><span>Starfall magic</span></div>
+        <div><b>E</b><span>Interact / talk</span></div>
+        <div><b>Esc</b><span>Pause</span></div>
+        <div><b>Wheel</b><span>Zoom camera</span></div>
+        <div><b>M</b><span>Mute audio</span></div>
+      </div>
+      <p class="controls-note">Touch: use the joystick, drag the right side to look, and tap the action buttons. Double-tap the joystick to toggle sprint.</p>
+      <button class="btn btn-primary" id="controls-close">Got it</button>
+    </div>
+  </div>
+
+  <div id="pause-menu" class="modal hidden">
+    <div class="modal-card pause-card">
+      <div class="pause-mark">✦</div>
+      <h3>PAUSED</h3>
+      <p class="pause-sub">The island holds its breath.</p>
+      <div class="pause-stats">
+        <div><span>Level</span><b id="pause-level">1</b></div>
+        <div><span>Coins</span><b id="pause-coins">0</b></div>
+        <div><span>Crystals</span><b id="pause-crystals">0 / 12</b></div>
+        <div><span>Quests</span><b id="pause-quests">0 / 3</b></div>
+      </div>
+      <button class="btn btn-primary" id="resume-btn">Resume</button>
+      <button class="btn btn-ghost" id="pause-controls-btn">Controls</button>
+      <button class="btn btn-ghost" id="mute-btn">Sound: On</button>
+      <button class="btn btn-ghost" id="menu-btn">Main Menu</button>
+    </div>
+  </div>
+
+  <div id="gameover" class="modal hidden">
+    <div class="modal-card gameover-card">
+      <div class="go-mark">☾</div>
+      <h3>THE LIGHT FADES</h3>
+      <p class="pause-sub">Astra falls… but the dawn remembers.</p>
+      <button class="btn btn-primary" id="retry-btn">Rise Again</button>
+      <button class="btn btn-ghost" id="gameover-menu-btn">Main Menu</button>
+    </div>
+  </div>
+
+  <div id="victory" class="modal hidden">
+    <div class="victory-rays"></div>
+    <div class="modal-card victory-card">
+      <div class="victory-mark">✦</div>
+      <div class="eyebrow"><span></span> THE HOLLOW KING FALLS <span></span></div>
+      <h3>THE LOST WORLD<br /><em>REMEMBERS</em></h3>
+      <p class="victory-copy">The seal is broken. Dawn spills across the isle once more.<br />Astra's legend is only beginning.</p>
+      <div class="victory-stats" id="victory-stats"></div>
+      <button class="btn btn-primary" id="continue-btn">Continue Exploring</button>
+      <button class="btn btn-ghost" id="victory-menu-btn">Main Menu</button>
+    </div>
+  </div>
+
+  <div id="fade"></div>
+
+</body>
+</html>
