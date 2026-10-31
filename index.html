@@ -1,0 +1,412 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <meta name="theme-color" content="#05070d" />
+  <title>BLADE ARENA — Duel of the Fractured</title>
+  <meta name="description" content="BLADE ARENA — a polished 2D blade-fighting game. Choose your fighter, master combos, and win the best-of-three duel." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Rajdhani:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' fill='%23070b14'/%3E%3Cpath d='M13 51 45 11l7 6-32 40z' fill='%235fe6ff'/%3E%3Cpath d='M11 48 44 9l4 3-32 40z' fill='%23eafcff'/%3E%3C/svg%3E" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <svg class="svg-defs" aria-hidden="true">
+    <defs>
+      <symbol id="icon-frost" viewBox="0 0 64 64">
+        <path d="M32 4v56M8 18l48 28M56 18 8 46" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round"/>
+        <path d="m32 4-6 9h12zM32 60l-6-9h12zM8 18l10 2-5 9zM56 46l-10-2 5-9zM56 18l-10-2 5-9zM8 46l10 2-5 9z" fill="currentColor"/>
+        <circle cx="32" cy="32" r="5.5" fill="none" stroke="currentColor" stroke-width="3"/>
+      </symbol>
+      <symbol id="icon-flame" viewBox="0 0 64 64">
+        <path d="M34 4c3 12-5 16-5 24 0 5 4 7 7 4 2-2 2-7 2-10 10 9 14 18 10 27-4 9-13 13-22 10C16 56 11 46 15 36c3-8 12-12 12-20 0-5-2-8-4-11 5 1 9 3 11 8z" fill="currentColor"/>
+        <path d="M32 35c0 6-4 8-4 13 0 4 3 7 7 7 5 0 8-4 8-8 0-5-5-8-11-12z" fill="#ffd98a"/>
+      </symbol>
+      <symbol id="icon-punch" viewBox="0 0 64 64">
+        <path d="M18 28V17c0-3 2-5 5-5s5 2 5 5v8-13c0-3 2-5 5-5s5 2 5 5v13-9c0-3 2-4 4-4 3 0 5 2 5 5v25c0 10-7 17-17 17h-3c-7 0-12-4-15-10L7 36c-2-4 0-8 4-8 2 0 4 1 5 3l2 4z" fill="currentColor"/>
+      </symbol>
+      <symbol id="icon-kick" viewBox="0 0 64 64">
+        <path d="M22 6h12v27l18 6c5 2 8 6 8 11v8H18V38l-8-3v-8l12-3z" fill="currentColor"/>
+        <path d="M18 52h42v6H18z" fill="#ffffff" opacity=".25"/>
+      </symbol>
+      <symbol id="icon-shield" viewBox="0 0 64 64">
+        <path d="M32 5 10 13v17c0 14 9 24 22 30 13-6 22-16 22-30V13z" fill="none" stroke="currentColor" stroke-width="4"/>
+        <path d="M32 13 18 18v12c0 9 5 16 14 21 9-5 14-12 14-21V18z" fill="currentColor" opacity=".65"/>
+        <path d="m24 31 6 6 12-13" fill="none" stroke="#071018" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+      </symbol>
+      <symbol id="icon-special" viewBox="0 0 64 64">
+        <path d="M32 3c2 15 5 24 29 29-24 5-27 14-29 29-2-15-5-24-29-29 24-5 27-14 29-29z" fill="currentColor"/>
+        <path d="M32 17c1 8 3 12 15 15-12 3-14 7-15 15-1-8-3-12-15-15 12-3 14-7 15-15z" fill="#fff" opacity=".8"/>
+      </symbol>
+      <symbol id="icon-left" viewBox="0 0 64 64"><path d="M42 12 22 32l20 20" fill="none" stroke="currentColor" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+      <symbol id="icon-right" viewBox="0 0 64 64"><path d="m22 12 20 20-20 20" fill="none" stroke="currentColor" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+      <symbol id="icon-up" viewBox="0 0 64 64"><path d="m12 42 20-20 20 20" fill="none" stroke="currentColor" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+      <symbol id="icon-play" viewBox="0 0 64 64"><path d="M22 10 52 32 22 54z" fill="currentColor"/></symbol>
+      <symbol id="icon-pause" viewBox="0 0 64 64"><path d="M16 10h12v44H16zM36 10h12v44H36z" fill="currentColor"/></symbol>
+      <symbol id="icon-sound" viewBox="0 0 64 64"><path d="M10 24h10L36 10v44L20 40H10z" fill="currentColor"/><path d="M44 22c5 6 5 14 0 20M50 16c9 10 9 22 0 32" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round"/></symbol>
+      <symbol id="icon-mute" viewBox="0 0 64 64"><path d="M10 24h10L36 10v44L20 40H10z" fill="currentColor"/><path d="m44 24 14 16M58 24 44 40" stroke="currentColor" stroke-width="4" stroke-linecap="round"/></symbol>
+      <symbol id="icon-back" viewBox="0 0 64 64"><path d="M28 12 12 28l16 16M14 28h38" fill="none" stroke="currentColor" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+      <symbol id="icon-sword" viewBox="0 0 64 64"><path d="M50 8 26 32l-4 10 10-4L56 14z" fill="currentColor"/><path d="m20 36 8 8M12 44l8 8M8 56l6-6" stroke="currentColor" stroke-width="5" stroke-linecap="round"/></symbol>
+      <symbol id="icon-settings" viewBox="0 0 64 64"><path d="M32 20a12 12 0 1 0 0 24 12 12 0 0 0 0-24zm0 6a6 6 0 1 1 0 12 6 6 0 0 1 0-12z" fill="currentColor"/><path d="M28 4h8l2 8 7 4 8-2 4 7-6 6v8l6 6-4 7-8-2-7 4-2 8h-8l-2-8-7-4-8 2-4-7 6-6v-8l-6-6 4-7 8 2 7-4z" fill="none" stroke="currentColor" stroke-width="3"/></symbol>
+    </defs>
+  </svg>
+
+  <div id="app">
+    <canvas id="game" aria-label="Blade Arena game canvas"></canvas>
+    <div class="fx-grain"></div>
+    <div class="fx-vignette"></div>
+    <div class="fx-scan"></div>
+
+    <!-- ================= HUD ================= -->
+    <div id="hud" class="hud is-hidden">
+      <div class="hud-top">
+        <div class="fighter-panel left" id="panel-player">
+          <div class="portrait-shell">
+            <div class="portrait"><svg id="portrait-player"><use href="#icon-frost"></use></svg><span class="portrait-corner"></span></div>
+            <div class="portrait-tag" id="tag-player">1P</div>
+          </div>
+          <div class="bar-stack">
+            <div class="name-row">
+              <span class="side-badge">P1</span>
+              <span class="fighter-name" id="name-player">AKIRA</span>
+              <span class="fighter-epithet" id="epithet-player">FROSTFANG</span>
+            </div>
+            <div class="health-frame">
+              <div class="health-trail" id="hp-trail-player"></div>
+              <div class="health-fill" id="hp-player"></div>
+              <div class="health-gloss"></div>
+              <div class="health-ticks"></div>
+              <span class="health-value" id="hpval-player">1000</span>
+            </div>
+            <div class="energy-row">
+              <span class="energy-label">ENERGY</span>
+              <div class="energy-frame"><div class="energy-fill" id="energy-player"></div><div class="energy-segs"></div></div>
+              <span class="energy-value" id="energyval-player">32</span>
+            </div>
+          </div>
+          <div class="pips" id="pips-player"><i></i><i></i></div>
+        </div>
+
+        <div class="timer-core">
+          <div class="timer-plate">
+            <span class="timer-label">TIME</span>
+            <span class="timer-value" id="timer">99</span>
+            <span class="round-text" id="round-text">ROUND 1</span>
+          </div>
+          <div class="timer-wings"><i></i><i></i></div>
+        </div>
+
+        <div class="fighter-panel right" id="panel-cpu">
+          <div class="pips" id="pips-cpu"><i></i><i></i></div>
+          <div class="bar-stack">
+            <div class="name-row">
+              <span class="fighter-epithet" id="epithet-cpu">CRIMSON RONIN</span>
+              <span class="fighter-name" id="name-cpu">RAZE</span>
+              <span class="side-badge cpu">CPU</span>
+            </div>
+            <div class="health-frame">
+              <div class="health-trail" id="hp-trail-cpu"></div>
+              <div class="health-fill" id="hp-cpu"></div>
+              <div class="health-gloss"></div>
+              <div class="health-ticks"></div>
+              <span class="health-value" id="hpval-cpu">1080</span>
+            </div>
+            <div class="energy-row">
+              <span class="energy-value" id="energyval-cpu">32</span>
+              <div class="energy-frame"><div class="energy-fill" id="energy-cpu"></div><div class="energy-segs"></div></div>
+              <span class="energy-label">ENERGY</span>
+            </div>
+          </div>
+          <div class="portrait-shell">
+            <div class="portrait"><svg id="portrait-cpu"><use href="#icon-flame"></use></svg><span class="portrait-corner"></span></div>
+            <div class="portrait-tag">CPU</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="combo-display left" id="combo-player"><span class="combo-num">2</span><span class="combo-copy">HIT<br><b>COMBO</b></span></div>
+      <div class="combo-display right" id="combo-cpu"><span class="combo-num">2</span><span class="combo-copy">HIT<br><b>COMBO</b></span></div>
+
+      <div class="ready-badge left is-hidden" id="ready-player"><svg><use href="#icon-special"></use></svg> SPECIAL READY</div>
+      <div class="ready-badge right is-hidden" id="ready-cpu"><svg><use href="#icon-special"></use></svg> SPECIAL READY</div>
+
+      <div class="hud-bottom">
+        <span class="hud-hint">J / K ATTACK &nbsp;·&nbsp; L BLOCK &nbsp;·&nbsp; SPACE SPECIAL</span>
+        <span class="hud-build">BLADE ARENA // DUEL 01</span>
+      </div>
+    </div>
+
+    <!-- ================= TOUCH CONTROLS ================= -->
+    <div id="touch-controls" class="touch-controls is-hidden" aria-label="Touch controls">
+      <div class="touch-move">
+        <button class="touch-btn move" data-touch="left" aria-label="Move left"><svg><use href="#icon-left"></use></svg></button>
+        <button class="touch-btn move" data-touch="right" aria-label="Move right"><svg><use href="#icon-right"></use></svg></button>
+        <button class="touch-btn jump" data-touch="jump" aria-label="Jump"><svg><use href="#icon-up"></use></svg><span>JUMP</span></button>
+      </div>
+      <div class="touch-actions">
+        <button class="touch-btn punch" data-touch="punch" aria-label="Punch"><svg><use href="#icon-punch"></use></svg><span>PUNCH</span></button>
+        <button class="touch-btn kick" data-touch="kick" aria-label="Kick"><svg><use href="#icon-kick"></use></svg><span>KICK</span></button>
+        <button class="touch-btn block" data-touch="block" aria-label="Block"><svg><use href="#icon-shield"></use></svg><span>BLOCK</span></button>
+        <button class="touch-btn special" data-touch="special" aria-label="Special attack"><svg><use href="#icon-special"></use></svg><span>SPECIAL</span></button>
+      </div>
+    </div>
+
+    <!-- ================= ANNOUNCER ================= -->
+    <div id="announce" class="announce" aria-live="polite">
+      <span class="announce-kicker">ROUND</span>
+      <strong class="announce-text">ROUND 1</strong>
+      <span class="announce-sub">THE BLADES AWAKEN</span>
+      <i class="announce-line"></i>
+    </div>
+
+    <!-- ================= TITLE ================= -->
+    <section id="screen-title" class="screen title-screen is-active">
+      <div class="title-overlay"></div>
+      <div class="title-frame">
+        <div class="title-top">
+          <span class="brand-mini"><svg><use href="#icon-sword"></use></svg> FRACTURED FATES LEAGUE</span>
+          <span class="season-tag">SEASON <b>01</b> // NIGHT CIRCUIT</span>
+        </div>
+
+        <div class="title-logo">
+          <span class="logo-kicker">DUEL OF THE FRACTURED</span>
+          <h1 class="logo"><span>BLADE</span><em>ARENA</em></h1>
+          <div class="logo-underline"><i></i><span>STEEL · SPIRIT · SURVIVAL</span><i></i></div>
+        </div>
+
+        <div class="title-actions">
+          <button id="btn-start" class="btn primary xl">
+            <span class="btn-index">01</span>
+            <span class="btn-copy"><small>PRESS ENTER</small>ENTER THE ARENA</span>
+            <span class="btn-arrow">›</span>
+          </button>
+          <button id="btn-howto" class="btn ghost">
+            <span class="btn-index">02</span>
+            <span class="btn-copy"><small>CONTROLS &amp; COMBOS</small>HOW TO PLAY</span>
+            <span class="btn-arrow">›</span>
+          </button>
+        </div>
+
+        <div class="title-roster">
+          <div class="roster-label"><span>CHOOSE YOUR FATE</span><i></i></div>
+          <button class="roster-chip" data-roster="akira">
+            <span class="roster-icon frost"><svg><use href="#icon-frost"></use></svg></span>
+            <span><b>AKIRA</b><small>FROSTFANG</small></span>
+          </button>
+          <span class="roster-vs">VS</span>
+          <button class="roster-chip" data-roster="raze">
+            <span class="roster-icon flame"><svg><use href="#icon-flame"></use></svg></span>
+            <span><b>RAZE</b><small>CRIMSON RONIN</small></span>
+          </button>
+        </div>
+
+        <div class="title-footer">
+          <span><kbd>WASD</kbd> MOVE <kbd>J</kbd> PUNCH <kbd>K</kbd> KICK <kbd>L</kbd> BLOCK <kbd>SPACE</kbd> SPECIAL</span>
+          <span class="build-tag">BUILD 1.0.0 <i></i></span>
+        </div>
+      </div>
+      <div class="corner-deco tl"></div><div class="corner-deco tr"></div><div class="corner-deco bl"></div><div class="corner-deco br"></div>
+    </section>
+
+    <!-- ================= SELECT ================= -->
+    <section id="screen-select" class="screen select-screen">
+      <div class="select-overlay"></div>
+      <header class="select-header">
+        <button id="btn-select-back" class="icon-btn" aria-label="Back to title"><svg><use href="#icon-back"></use></svg></button>
+        <div class="select-title">
+          <span class="kicker">STEP 01 // PICK YOUR BLADE</span>
+          <h2>CHOOSE YOUR <em>FATE</em></h2>
+        </div>
+        <div class="select-head-right">
+          <span class="cpu-tag">CPU: <b>VETERAN AI</b></span>
+          <span class="select-hint">ARROWS TO BROWSE · ENTER TO FIGHT</span>
+        </div>
+      </header>
+
+      <div class="select-body">
+        <div class="fighter-grid">
+          <button class="fighter-card is-selected" data-fighter="akira">
+            <canvas class="card-preview" data-preview="akira"></canvas>
+            <span class="card-vignette"></span>
+            <span class="card-grid"></span>
+            <span class="card-index">01</span>
+            <span class="card-tag" data-tag="akira">1P</span>
+            <span class="card-copy">
+              <small>BLADE OF THE NORTH</small>
+              <strong>AKIRA</strong>
+              <em>FROSTFANG</em>
+            </span>
+            <span class="card-stats">
+              <span><i>POWER</i><b class="stat-bar" data-stat="power"><u style="--v:70%"></u></b></span>
+              <span><i>SPEED</i><b class="stat-bar" data-stat="speed"><u style="--v:100%"></u></b></span>
+              <span><i>RANGE</i><b class="stat-bar" data-stat="range"><u style="--v:80%"></u></b></span>
+            </span>
+            <span class="card-special"><i>SPECIAL</i><b>GLACIAL CRESCENT</b></span>
+            <span class="card-select-mark"><svg><use href="#icon-sword"></use></svg> SELECTED</span>
+          </button>
+
+          <div class="vs-badge"><span>VS</span><i></i></div>
+
+          <button class="fighter-card raze" data-fighter="raze">
+            <canvas class="card-preview" data-preview="raze"></canvas>
+            <span class="card-vignette"></span>
+            <span class="card-grid"></span>
+            <span class="card-index">02</span>
+            <span class="card-tag" data-tag="raze">CPU</span>
+            <span class="card-copy">
+              <small>ASHEN ORDER</small>
+              <strong>RAZE</strong>
+              <em>CRIMSON RONIN</em>
+            </span>
+            <span class="card-stats">
+              <span><i>POWER</i><b class="stat-bar" data-stat="power"><u style="--v:100%"></u></b></span>
+              <span><i>SPEED</i><b class="stat-bar" data-stat="speed"><u style="--v:70%"></u></b></span>
+              <span><i>RANGE</i><b class="stat-bar" data-stat="range"><u style="--v:70%"></u></b></span>
+            </span>
+            <span class="card-special"><i>SPECIAL</i><b>INFERNO RIFT</b></span>
+            <span class="card-select-mark"><svg><use href="#icon-sword"></use></svg> SELECTED</span>
+          </button>
+        </div>
+
+        <div class="arena-select">
+          <div class="arena-head">
+            <span class="kicker">STEP 02 // CHOOSE THE GROUND</span>
+            <h3>SELECT <em>ARENA</em></h3>
+          </div>
+          <div class="arena-grid">
+            <button class="arena-card is-selected" data-arena="0">
+              <canvas class="arena-preview" data-arena-preview="0"></canvas>
+              <span class="arena-shade"></span>
+              <span class="arena-num">01</span>
+              <span class="arena-copy"><b>NEON DISTRICT</b><small>SECTOR 09 // ROOFTOP</small></span>
+              <span class="arena-check">✓</span>
+            </button>
+            <button class="arena-card" data-arena="1">
+              <canvas class="arena-preview" data-arena-preview="1"></canvas>
+              <span class="arena-shade"></span>
+              <span class="arena-num">02</span>
+              <span class="arena-copy"><b>FROST SHRINE</b><small>MT. KAGURA // TEMPLE</small></span>
+              <span class="arena-check">✓</span>
+            </button>
+            <button class="arena-card" data-arena="2">
+              <canvas class="arena-preview" data-arena-preview="2"></canvas>
+              <span class="arena-shade"></span>
+              <span class="arena-num">03</span>
+              <span class="arena-copy"><b>EMBER FOUNDRY</b><small>INFERNO CORE // LEVEL 4</small></span>
+              <span class="arena-check">✓</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <footer class="select-footer">
+        <div class="matchup-mini">
+          <span class="mini-side"><small>1P</small><b id="sel-player">AKIRA</b></span>
+          <span class="mini-vs">VS</span>
+          <span class="mini-side cpu"><small>CPU</small><b id="sel-cpu">RAZE</b></span>
+          <span class="mini-arena">@ <b id="sel-arena">NEON DISTRICT</b></span>
+        </div>
+        <button id="btn-fight" class="btn primary fight-btn">
+          <span class="btn-copy"><small>BEST OF THREE</small>BEGIN THE DUEL</span>
+          <span class="btn-arrow">›</span>
+        </button>
+      </footer>
+      <div class="corner-deco tl"></div><div class="corner-deco tr"></div><div class="corner-deco bl"></div><div class="corner-deco br"></div>
+    </section>
+
+    <!-- ================= HOW TO PLAY ================= -->
+    <section id="screen-help" class="screen modal-screen">
+      <div class="modal-panel help-panel">
+        <button id="btn-help-close" class="icon-btn close" aria-label="Close"><span>×</span></button>
+        <span class="kicker">FIELD MANUAL // 01</span>
+        <h2>HOW TO <em>FIGHT</em></h2>
+        <p class="modal-lead">Break their guard. Bank energy. End the round with a blade technique. First to two rounds takes the duel.</p>
+        <div class="help-grid">
+          <div class="help-col">
+            <h3>KEYBOARD</h3>
+            <div class="key-row"><span><kbd>A</kbd><kbd>D</kbd> / <kbd>←</kbd><kbd>→</kbd></span><b>MOVE</b></div>
+            <div class="key-row"><span><kbd>W</kbd> / <kbd>↑</kbd></span><b>JUMP</b></div>
+            <div class="key-row"><span><kbd>J</kbd></span><b>PUNCH</b></div>
+            <div class="key-row"><span><kbd>K</kbd></span><b>KICK</b></div>
+            <div class="key-row"><span><kbd>L</kbd></span><b>BLOCK / HOLD</b></div>
+            <div class="key-row"><span><kbd>SPACE</kbd></span><b>SPECIAL · 50 ENERGY</b></div>
+            <div class="key-row"><span><kbd>ESC</kbd></span><b>PAUSE</b></div>
+          </div>
+          <div class="help-col">
+            <h3>COMBAT RULES</h3>
+            <ul class="rule-list">
+              <li><b>CHAIN</b> Punch → Kick → Special cancels into a combo on contact.</li>
+              <li><b>GUARD</b> Hold block to absorb hits. Chip damage still lands.</li>
+              <li><b>ENERGY</b> Land hits, block, and take damage to build 50 energy.</li>
+              <li><b>SPECIAL</b> Fires a blade wave. Enhanced visuals at full energy.</li>
+              <li><b>ROUNDS</b> Best of three. 99-second timer. Higher health wins time-outs.</li>
+            </ul>
+          </div>
+          <div class="help-col">
+            <h3>TOUCH</h3>
+            <div class="touch-diagram">
+              <div><span class="diag-pad">◀ ▶ ▲</span><small>MOVE / JUMP</small></div>
+              <div><span class="diag-btn p">P</span><span class="diag-btn k">K</span><span class="diag-btn b">B</span><span class="diag-btn s">S</span><small>ATTACKS</small></div>
+            </div>
+            <p class="touch-note">Multi-touch is supported. Hold <b>BLOCK</b> while tapping attacks to guard-cancel.</p>
+          </div>
+        </div>
+        <button id="btn-help-done" class="btn primary wide">UNDERSTOOD <span class="btn-arrow">›</span></button>
+      </div>
+    </section>
+
+    <!-- ================= PAUSE ================= -->
+    <section id="screen-pause" class="screen modal-screen">
+      <div class="modal-panel pause-panel">
+        <span class="kicker">COMBAT SUSPENDED</span>
+        <h2>PAUSED</h2>
+        <div class="pause-score"><span>1P <b id="pause-score-player">0</b></span><i>—</i><span><b id="pause-score-cpu">0</b> CPU</span></div>
+        <button id="btn-resume" class="btn primary wide">RESUME <span class="btn-arrow">›</span></button>
+        <button id="btn-restart" class="btn ghost wide">RESTART MATCH</button>
+        <button id="btn-pause-select" class="btn ghost wide">CHARACTER SELECT</button>
+        <button id="btn-sound" class="btn ghost wide">SOUND: ON</button>
+        <button id="btn-pause-menu" class="btn ghost wide">MAIN MENU</button>
+        <p class="pause-hint"><kbd>M</kbd> TOGGLE SOUND · <kbd>ESC</kbd> RESUME</p>
+      </div>
+    </section>
+
+    <!-- ================= MATCH OVER ================= -->
+    <section id="screen-match" class="screen match-screen">
+      <div class="match-overlay"></div>
+      <div class="match-panel">
+        <span class="kicker" id="match-kicker">MATCH COMPLETE // BEST OF THREE</span>
+        <div class="match-winner">
+          <span class="match-icon" id="match-icon"><svg><use href="#icon-frost"></use></svg></span>
+          <div>
+            <h2 id="match-winner">AKIRA</h2>
+            <p id="match-epithet">FROSTFANG</p>
+          </div>
+        </div>
+        <div class="match-verdict" id="match-verdict">VICTORY</div>
+        <div class="match-score">
+          <span class="score-side"><small>1P</small><b id="match-score-player">2</b></span>
+          <span class="score-dash">—</span>
+          <span class="score-side cpu"><small>CPU</small><b id="match-score-cpu">0</b></span>
+        </div>
+        <div class="match-stats">
+          <span><small>MAX COMBO</small><b id="stat-combo">4 HITS</b></span>
+          <span><small>HITS LANDED</small><b id="stat-hits">18</b></span>
+          <span><small>ARENA</small><b id="stat-arena">NEON DISTRICT</b></span>
+        </div>
+        <div class="match-actions">
+          <button id="btn-rematch" class="btn primary"><span class="btn-copy"><small>SAME BLADES</small>REMATCH</span><span class="btn-arrow">›</span></button>
+          <button id="btn-change" class="btn ghost">CHANGE FIGHTERS</button>
+          <button id="btn-menu" class="btn ghost">MAIN MENU</button>
+        </div>
+      </div>
+      <div class="corner-deco tl"></div><div class="corner-deco tr"></div><div class="corner-deco bl"></div><div class="corner-deco br"></div>
+    </section>
+  </div>
+
+  <div id="rotate-hint" class="rotate-hint"><span>ROTATE FOR WIDESCREEN</span><small>Better with your device turned sideways</small></div>
+
+  <script type="module" src="js/main.js"></script>
+</body>
+</html>
