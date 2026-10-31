@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+  <meta name="theme-color" content="#05060b" />
+  <meta name="description" content="SHADOW NINJA — a neon-soaked 2D action game. Hunt the oni shogun through a rain-soaked night." />
+  <title>SHADOW NINJA — A Night of Steel</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%2305070d'/%3E%3Cpath d='M32 9c-9 0-14 7-14 15v9l-6 21h12l4-10h8l4 10h12l-6-21v-9c0-8-5-15-14-15z' fill='%23e0233e'/%3E%3Cpath d='M19 22h26v7H19z' fill='%2305070d'/%3E%3Ccircle cx='27' cy='25.5' r='2.1' fill='%237df7ff'/%3E%3Ccircle cx='37' cy='25.5' r='2.1' fill='%237df7ff'/%3E%3C/svg%3E" />
+  <link rel="stylesheet" href="./css/style.css" />
+</head>
+<body>
+  <div id="app">
+    <canvas id="game" aria-label="SHADOW NINJA game view"></canvas>
+
+    <div id="vignette" aria-hidden="true"></div>
+    <div id="damage-flash" aria-hidden="true"></div>
+    <div id="grain" aria-hidden="true"></div>
+
+    <!-- ============================ HUD ============================ -->
+    <div id="hud" aria-hidden="false">
+      <div class="hud-left">
+        <div class="hud-sigil">影</div>
+        <div class="hud-bars">
+          <div class="bar-row">
+            <div class="bar-label"><span>VITALITY</span><span id="health-text">100</span></div>
+            <div class="bar health"><div id="health-fill"></div><div class="bar-ticks"></div></div>
+          </div>
+          <div class="bar-row">
+            <div class="bar-label"><span>FOCUS</span><span id="focus-text">0</span></div>
+            <div class="bar focus" id="focus-bar"><div id="focus-fill"></div><div class="bar-ticks"></div></div>
+          </div>
+          <div class="dash-row">
+            <span class="dash-label">DASH</span>
+            <div class="dash-track"><i id="dash-fill"></i></div>
+            <span id="dash-state">READY</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="hud-top-center">
+        <div id="boss-bar" class="boss-bar">
+          <div class="boss-label">
+            <span class="boss-kicker" id="boss-kicker">FINAL DUEL</span>
+            <span class="boss-name" id="boss-name">KAGEMASA <em>·</em> ONI SHOGUN</span>
+          </div>
+          <div class="boss-track"><div id="boss-fill"></div><div class="boss-ticks"></div></div>
+        </div>
+      </div>
+
+      <div class="hud-right">
+        <div class="score-label">SCORE</div>
+        <div class="score" id="score">0000000</div>
+        <div class="best-line">BEST <span id="best">0000000</span></div>
+        <div class="wave-label" id="wave-label">WAVE I</div>
+        <div class="hud-actions">
+          <button id="pause-btn" class="icon-btn" aria-label="Pause game" title="Pause (Esc)">
+            <span class="pause-glyph" aria-hidden="true">Ⅱ</span>
+          </button>
+          <button class="icon-btn" data-mute aria-label="Toggle sound" title="Mute (M)">
+            <span class="icon-sound" aria-hidden="true">♪</span>
+            <span class="icon-muted" aria-hidden="true">♪</span>
+          </button>
+        </div>
+      </div>
+
+      <div id="combo" class="combo">
+        <div class="combo-num"><span id="combo-count">0</span><em>HIT COMBO</em></div>
+        <div class="combo-mult" id="combo-mult">×1.0</div>
+      </div>
+
+      <div id="hints" class="hints">
+        <span><kbd>A</kbd><kbd>D</kbd> MOVE</span>
+        <span><kbd>SPACE</kbd> JUMP ×2</span>
+        <span><kbd>J</kbd> ATTACK</span>
+        <span><kbd>K</kbd> DASH</span>
+        <span><kbd>L</kbd> BURST</span>
+      </div>
+    </div>
+
+    <!-- ========================== BANNER ========================== -->
+    <div id="banner" class="banner" aria-live="polite">
+      <div id="banner-kicker" class="banner-kicker"></div>
+      <div id="banner-title" class="banner-title"></div>
+      <div id="banner-rule"></div>
+      <div id="banner-sub" class="banner-sub"></div>
+    </div>
+
+    <!-- ======================= MOBILE CONTROLS ===================== -->
+    <div id="mobile-controls" class="mobile-controls" aria-hidden="true">
+      <div id="joystick" class="joystick" aria-label="Movement joystick">
+        <div class="joy-ring"></div>
+        <div class="joy-cross"></div>
+        <div id="joystick-knob" class="joy-knob"></div>
+        <span class="joy-label">MOVE</span>
+      </div>
+      <div class="action-cluster">
+        <button class="action-btn burst" data-action="burst" aria-label="Shadow burst">
+          <span class="jp">爆</span><small>BURST</small>
+        </button>
+        <button class="action-btn dash" data-action="dash" aria-label="Dash">
+          <span class="jp">疾</span><small>DASH</small>
+        </button>
+        <button class="action-btn jump" data-action="jump" aria-label="Jump">
+          <span class="jp">跳</span><small>JUMP</small>
+        </button>
+        <button class="action-btn attack" data-action="attack" aria-label="Attack">
+          <span class="jp">斬</span><small>ATTACK</small>
+        </button>
+      </div>
+    </div>
+
+    <!-- =========================== MENU =========================== -->
+    <section id="menu-screen" class="screen menu-screen active">
+      <div class="menu-shade" aria-hidden="true"></div>
+      <div class="menu-wrap">
+        <div class="menu-kicker"><span class="kicker-rule"></span>A NIGHT OF STEEL<span class="kicker-rule"></span></div>
+        <div class="title-block">
+          <div class="title-jp" aria-hidden="true">影<br />忍</div>
+          <h1 class="game-title">
+            <span class="title-line">SHADOW</span>
+            <span class="title-line accent">NINJA</span>
+          </h1>
+        </div>
+        <p class="tagline">The shogun's blade has one name left to carve.</p>
+
+        <div class="menu-actions">
+          <button id="start-btn" class="btn primary">
+            <span class="btn-slash" aria-hidden="true"></span>
+            <span class="btn-text">BEGIN THE HUNT</span>
+            <span class="btn-key">ENTER</span>
+          </button>
+          <div class="menu-best">BEST RUN <strong id="menu-best">0000000</strong></div>
+        </div>
+
+        <div class="controls-legend">
+          <div class="legend-item"><span class="keys"><kbd>A</kbd><kbd>D</kbd></span><span class="legend-label">MOVE</span></div>
+          <div class="legend-item"><span class="keys"><kbd>SPACE</kbd></span><span class="legend-label">JUMP / DOUBLE JUMP</span></div>
+          <div class="legend-item"><span class="keys"><kbd>J</kbd></span><span class="legend-label">SWORD</span></div>
+          <div class="legend-item"><span class="keys"><kbd>K</kbd></span><span class="legend-label">DASH</span></div>
+          <div class="legend-item"><span class="keys"><kbd>L</kbd></span><span class="legend-label">SHADOW BURST</span></div>
+        </div>
+        <p class="touch-note">Touch controls appear in battle — joystick to move, talismans to strike.</p>
+      </div>
+
+      <div class="menu-aside" aria-hidden="true">
+        <span class="aside-chapter">CHAPTER 01</span>
+        <span class="aside-line"></span>
+        <span class="aside-text">THE LAST SHINOBI</span>
+      </div>
+
+      <button class="corner-mute icon-btn" data-mute aria-label="Toggle sound">
+        <span class="icon-sound" aria-hidden="true">♪</span>
+        <span class="icon-muted" aria-hidden="true">♪</span>
+      </button>
+
+      <div class="menu-foot">
+        <span>WASD / ARROWS</span><span class="dot"></span><span>ESC PAUSE</span><span class="dot"></span><span>M MUTE</span>
+      </div>
+    </section>
+
+    <!-- =========================== PAUSE ========================== -->
+    <section id="pause-screen" class="screen panel-screen">
+      <div class="panel">
+        <div class="panel-kicker" id="pause-kicker">THE NIGHT HOLDS ITS BREATH</div>
+        <h2 class="panel-title">PAUSED</h2>
+        <div class="panel-stats inline">
+          <div><span>WAVE</span><strong id="pause-wave">I</strong></div>
+          <div><span>SCORE</span><strong id="pause-score">0000000</strong></div>
+          <div><span>COMBO</span><strong id="pause-combo">0</strong></div>
+        </div>
+        <div class="panel-actions">
+          <button id="resume-btn" class="btn primary"><span class="btn-text">RESUME</span><span class="btn-key">ESC</span></button>
+          <button id="pause-restart-btn" class="btn ghost">RESTART RUN</button>
+          <button id="pause-menu-btn" class="btn ghost small">RETURN TO TITLE</button>
+        </div>
+        <p class="panel-note">Tip: dash through arrows to cut them from the air.</p>
+      </div>
+    </section>
+
+    <!-- ========================= GAME OVER ======================== -->
+    <section id="gameover-screen" class="screen panel-screen gameover-screen">
+      <div class="panel wide">
+        <div class="panel-kicker danger">YOU HAVE FALLEN</div>
+        <h2 class="panel-title big">SHADOW<br /><span>EXTINGUISHED</span></h2>
+        <div class="panel-stats grid">
+          <div><span>SCORE</span><strong id="over-score">0000000</strong></div>
+          <div><span>WAVE REACHED</span><strong id="over-wave">I</strong></div>
+          <div><span>SOULS TAKEN</span><strong id="over-kills">0</strong></div>
+          <div><span>BEST COMBO</span><strong id="over-combo">0</strong></div>
+          <div><span>TIME</span><strong id="over-time">00:00</strong></div>
+          <div><span>BEST RUN</span><strong id="over-best">0000000</strong></div>
+        </div>
+        <div id="over-record" class="record-badge">NEW RECORD</div>
+        <div class="panel-actions">
+          <button id="retry-btn" class="btn primary"><span class="btn-text">RISE AGAIN</span><span class="btn-key">R</span></button>
+          <button id="over-menu-btn" class="btn ghost">RETURN TO TITLE</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ========================== VICTORY ======================== -->
+    <section id="victory-screen" class="screen panel-screen victory-screen">
+      <div class="panel wide">
+        <div class="panel-kicker gold">THE SHOGUN HAS FALLEN</div>
+        <h2 class="panel-title big">DAWN<br /><span>BREAKS</span></h2>
+        <p class="victory-line">The rain slows. Somewhere beyond the torii, a new name is whispered.</p>
+        <div class="panel-stats grid">
+          <div><span>FINAL SCORE</span><strong id="vic-score">0000000</strong></div>
+          <div><span>WAVE</span><strong id="vic-wave">VI</strong></div>
+          <div><span>SOULS TAKEN</span><strong id="vic-kills">0</strong></div>
+          <div><span>BEST COMBO</span><strong id="vic-combo">0</strong></div>
+          <div><span>TIME</span><strong id="vic-time">00:00</strong></div>
+          <div><span>BEST RUN</span><strong id="vic-best">0000000</strong></div>
+        </div>
+        <div id="vic-record" class="record-badge">NEW RECORD</div>
+        <div class="panel-actions">
+          <button id="victory-again-btn" class="btn primary"><span class="btn-text">WALK AGAIN</span><span class="btn-key">R</span></button>
+          <button id="victory-menu-btn" class="btn ghost">RETURN TO TITLE</button>
+        </div>
+      </div>
+    </section>
+
+    <div id="rotate" class="rotate" aria-hidden="true">
+      <div class="rotate-icon" aria-hidden="true">↻</div>
+      <h3>ROTATE YOUR DEVICE</h3>
+      <p>SHADOW NINJA is drawn for the wide night. Turn your screen sideways to enter the hunt.</p>
+    </div>
+
+    <div id="boot-flash" aria-hidden="true"></div>
+  </div>
+
+  <script type="module" src="./js/main.js"></script>
+</body>
+</html>
