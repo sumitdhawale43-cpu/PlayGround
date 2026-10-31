@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+  <meta name="theme-color" content="#0b1210" />
+  <title>The Remembering — a living-world survival game</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%230b1210'/%3E%3Cpath d='M16 5l8 11-8 11-8-11z' fill='%23e08a4c'/%3E%3Cpath d='M16 10l4.5 6-4.5 6-4.5-6z' fill='%23172219'/%3E%3C/svg%3E" />
+  <link rel="stylesheet" href="./styles.css" />
+</head>
+<body>
+  <canvas id="game" aria-label="The Remembering game world"></canvas>
+
+  <div id="hud" class="hud hidden">
+    <div class="hud-top">
+      <div class="vitals panel-soft">
+        <div class="vital" data-vital="hp" title="Health — click to eat if wounded">
+          <span class="v-icon">✚</span><div class="v-track"><div class="v-fill"></div></div><span class="v-val">100</span>
+        </div>
+        <div class="vital" data-vital="stam" title="Stamina — used to dodge">
+          <span class="v-icon">≈</span><div class="v-track"><div class="v-fill"></div></div><span class="v-val">100</span>
+        </div>
+        <div class="vital" data-vital="hunger" title="Hunger — click to eat">
+          <span class="v-icon">◒</span><div class="v-track"><div class="v-fill"></div></div><span class="v-val">92</span>
+        </div>
+        <div class="vital" data-vital="thirst" title="Thirst — click to drink at water">
+          <span class="v-icon">◈</span><div class="v-track"><div class="v-fill"></div></div><span class="v-val">88</span>
+        </div>
+        <div class="vital" data-vital="warmth" title="Warmth — stand by fire at night">
+          <span class="v-icon">☼</span><div class="v-track"><div class="v-fill"></div></div><span class="v-val">90</span>
+        </div>
+      </div>
+
+      <div class="world-clock">
+        <div class="clock-line"><span id="clock-day">Day 1</span><span class="dot">·</span><span id="clock-time">08:24</span><span class="dot">·</span><span id="weather-label">clear</span></div>
+        <div class="region-line" id="region-name">Hearthcamp Reach</div>
+      </div>
+
+      <div class="top-actions">
+        <div class="memory-chip" title="The world's ledger of your deeds">
+          <span class="chip-label">MEMORY</span>
+          <span id="memory-count">0</span>
+          <span class="chip-sub"><span id="legend-count">0</span> legend</span>
+        </div>
+        <button class="icon-btn" id="btn-journal" title="Journal (J)" aria-label="Open journal">▤</button>
+        <button class="icon-btn" id="btn-craft" title="Craft (C)" aria-label="Open crafting">⚒</button>
+        <button class="icon-btn" id="btn-mute" title="Toggle sound" aria-label="Toggle sound">♪</button>
+        <button class="icon-btn" id="btn-pause" title="Menu (Esc)" aria-label="Open menu">☰</button>
+      </div>
+    </div>
+
+    <aside id="minimap-panel" class="panel-soft">
+      <canvas id="minimap" width="216" height="216" aria-label="Map of the valley"></canvas>
+      <div class="minimap-caption"><span>THE VALLEY</span><span id="minimap-seed">—</span></div>
+    </aside>
+
+    <div id="quest-card" class="panel-soft">
+      <div class="eyebrow" id="quest-eyebrow">WHISPERS</div>
+      <h2 id="quest-title">Gather what the valley offers</h2>
+      <p id="quest-text">Four wood, two stone. Press E beside a tree or rock.</p>
+      <div class="quest-progress" id="quest-progress"></div>
+    </div>
+
+    <div id="toasts" aria-live="polite"></div>
+
+    <div id="banner" class="banner" aria-live="polite">
+      <div class="banner-kicker"></div>
+      <div class="banner-title"></div>
+      <div class="banner-sub"></div>
+    </div>
+
+    <div id="hotbar" class="panel-soft">
+      <button class="slot" data-slot="0"></button>
+      <button class="slot" data-slot="1"></button>
+      <button class="slot" data-slot="2"></button>
+      <button class="slot" data-slot="3"></button>
+      <div class="hotbar-hint"><span>1–4</span> tools · <span>E</span> use · <span>Q</span> eat</div>
+    </div>
+
+    <div id="controls-hint">
+      <span><b>WASD</b> move</span><span><b>Mouse</b> aim</span><span><b>Click</b> strike</span><span><b>Shift</b> crouch</span><span><b>Space</b> dodge</span><span><b>J</b> journal</span>
+    </div>
+
+    <div id="interact-prompt" class="hidden"><span class="key">E</span> interact</div>
+
+    <div id="touch-controls">
+      <div id="joystick"><div id="joystick-knob"></div></div>
+      <div class="touch-actions">
+        <button class="touch-btn small" data-touch="tool" aria-label="Change tool">⇄</button>
+        <button class="touch-btn small" data-touch="journal" aria-label="Journal">▤</button>
+        <button class="touch-btn" data-touch="dodge" aria-label="Dodge">↯</button>
+        <button class="touch-btn attack" data-touch="attack" aria-label="Attack">✕</button>
+        <button class="touch-btn interact" data-touch="interact" aria-label="Interact">E</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── title ─────────────────────────────────────────────────────────────── -->
+  <div id="title-screen" class="overlay title-screen open">
+    <div class="title-bg"></div>
+    <div class="title-inner">
+      <div class="title-eyebrow">AN OPEN-WORLD SURVIVAL PROTOTYPE</div>
+      <h1 class="title-main">The <em>Remembering</em></h1>
+      <div class="title-rule"><span></span><i>✦</i><span></span></div>
+      <p class="title-tagline">The valley remembers everything you do.</p>
+      <p class="title-blurb">
+        Every kindness, every knife, every fire. The Hollow learn the shape of your violence.
+        The people carry your name between fires. No two ledgers fill the same way.
+      </p>
+      <div class="seed-row">
+        <label for="seed-input">World seed</label>
+        <input id="seed-input" maxlength="10" autocomplete="off" spellcheck="false" />
+        <span class="seed-hint">leave blank for a new one</span>
+      </div>
+      <div class="title-actions">
+        <button class="btn primary" id="btn-enter">Enter the valley</button>
+        <button class="btn ghost hidden" id="btn-new-world-title">New world</button>
+      </div>
+      <p class="title-note" id="title-note">A new valley. It has not met you yet.</p>
+      <div class="title-foot">
+        <span>WASD · mouse · E · C · J</span><span class="foot-sep">/</span><span>headphones recommended</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── journal ───────────────────────────────────────────────────────────── -->
+  <div id="journal-panel" class="overlay panel-overlay" data-close>
+    <div class="sheet wide">
+      <div class="sheet-head">
+        <div><div class="eyebrow">WHAT THE WORLD KNOWS</div><h2>The ledger</h2></div>
+        <button class="icon-btn" id="btn-journal-close" aria-label="Close journal">×</button>
+      </div>
+      <div id="journal-body" class="journal-body"></div>
+      <div class="sheet-foot"><span>J / Esc to close</span><span class="foot-quote">“The valley keeps a ledger. Every kindness and every knife.”</span></div>
+    </div>
+  </div>
+
+  <!-- ── craft ─────────────────────────────────────────────────────────────── -->
+  <div id="craft-panel" class="overlay panel-overlay" data-close>
+    <div class="sheet">
+      <div class="sheet-head">
+        <div><div class="eyebrow">WHAT YOU CARRY</div><h2>Make something of the wild</h2></div>
+        <button class="icon-btn" id="btn-craft-close" aria-label="Close crafting">×</button>
+      </div>
+      <div id="craft-inv" class="craft-inv"></div>
+      <div id="craft-list" class="craft-list"></div>
+      <div class="sheet-foot"><span>C / Esc to close</span><span class="foot-quote">Nothing here is given. Everything is taken and shaped.</span></div>
+    </div>
+  </div>
+
+  <!-- ── dialogue ──────────────────────────────────────────────────────────── -->
+  <div id="dialogue-panel" class="overlay panel-overlay" data-close>
+    <div class="dialogue-sheet">
+      <button class="icon-btn dlg-close" id="btn-dialogue-close" aria-label="Leave conversation">×</button>
+      <div class="dlg-portrait" id="dlg-initial">M</div>
+      <div class="dlg-main">
+        <div class="dlg-name-row"><h2 id="dlg-name">Maelin</h2><span id="dlg-role">Keeper</span></div>
+        <p id="dlg-text"></p>
+        <div id="dialogue-options" class="dialogue-options"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── pause ─────────────────────────────────────────────────────────────── -->
+  <div id="pause-panel" class="overlay panel-overlay" data-close>
+    <div class="sheet pause-sheet">
+      <div class="sheet-head">
+        <div><div class="eyebrow">THE VALLEY WAITS</div><h2>Paused</h2></div>
+        <button class="icon-btn" id="btn-pause-close" aria-label="Resume">×</button>
+      </div>
+      <div class="pause-actions">
+        <button class="btn primary" id="btn-resume">Return to the valley</button>
+        <button class="btn" id="btn-pause-journal">Open the ledger</button>
+        <button class="btn" id="btn-pause-craft">Craft</button>
+        <button class="btn" id="btn-pause-mute"><span id="pause-mute-label">Sound: on</span></button>
+        <button class="btn" id="btn-pause-touch"><span id="pause-touch-label">Touch controls: off</span></button>
+        <button class="btn danger" id="btn-pause-new">Abandon this valley</button>
+      </div>
+      <div class="controls-grid">
+        <div><b>WASD / arrows</b><span>move</span></div>
+        <div><b>Mouse</b><span>aim</span></div>
+        <div><b>Left click</b><span>strike / fire</span></div>
+        <div><b>Shift</b><span>crouch (quieter)</span></div>
+        <div><b>Space</b><span>dodge</span></div>
+        <div><b>E</b><span>gather, talk, drink, pray</span></div>
+        <div><b>1–4</b><span>spear, bow, torch, snare</span></div>
+        <div><b>C / J</b><span>craft / journal</span></div>
+        <div><b>Q</b><span>eat what you carry</span></div>
+        <div><b>Esc</b><span>menu</span></div>
+      </div>
+      <p class="pause-note">The valley does not reset when you die. It remembers the last one.</p>
+    </div>
+  </div>
+
+  <!-- ── death ─────────────────────────────────────────────────────────────── -->
+  <div id="death-panel" class="overlay death-panel">
+    <div class="death-inner">
+      <div class="eyebrow">THE LEDGER CLOSES</div>
+      <h1>The valley <em>remembers</em></h1>
+      <div class="death-name" id="death-name">Wren</div>
+      <p class="death-cause" id="death-cause">Taken by the Hollow on day 1.</p>
+      <div class="death-rule"></div>
+      <div class="death-section">
+        <h3>What it will keep</h3>
+        <ul id="death-memories" class="death-memories"></ul>
+      </div>
+      <p class="death-legacy" id="death-legacy"></p>
+      <div class="title-actions">
+        <button class="btn primary" id="btn-death-wake">Wake again</button>
+        <button class="btn ghost" id="btn-death-new">Abandon this valley</button>
+      </div>
+      <p class="death-foot">A new wanderer will inherit the world your last one made.</p>
+    </div>
+  </div>
+
+  <script type="module" src="./src/game.js"></script>
+</body>
+</html>
