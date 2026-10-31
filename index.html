@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1, user-scalable=no" />
+  <meta name="theme-color" content="#02101b" />
+  <meta name="description" content="Deep Ocean — a hand-drawn underwater survival expedition. Swim, salvage, upgrade your submarine and descend into the dark." />
+  <title>DEEP OCEAN — Underwater Survival</title>
+  <link rel="icon" href="./assets/favicon.svg" type="image/svg+xml" />
+  <link rel="preload" href="./assets/fonts/cinzel-latin.woff2" as="font" type="font/woff2" crossorigin />
+  <link rel="preload" href="./assets/fonts/manrope-latin.woff2" as="font" type="font/woff2" crossorigin />
+  <link rel="stylesheet" href="./css/style.css" />
+</head>
+<body>
+  <svg class="sprite" aria-hidden="true" focusable="false">
+    <symbol id="i-oxygen" viewBox="0 0 24 24"><circle cx="10" cy="13" r="5.4" fill="none" stroke="currentColor" stroke-width="1.7"/><circle cx="17.6" cy="7.2" r="2.6" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M7.8 13.2c.7-1.3 2-2 3.4-1.7" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></symbol>
+    <symbol id="i-hull" viewBox="0 0 24 24"><path d="M12 2.8 20 6v6.2c0 4.5-3.2 7.6-8 9-4.8-1.4-8-4.5-8-9V6l8-3.2Z" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/><path d="M8.4 12.1h7.2M12 8.5v7.2" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" opacity=".8"/></symbol>
+    <symbol id="i-salvage" viewBox="0 0 24 24"><path d="m12 2.6 2 2.1 2.9-.6.7 2.8 2.6 1.4-1.1 2.7 1.1 2.7-2.6 1.4-.7 2.8-2.9-.6-2 2.1-2-2.1-2.9.6-.7-2.8-2.6-1.4L5.9 11 4.8 8.3l2.6-1.4.7-2.8 2.9.6 2-2.1Z" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/><circle cx="12" cy="11" r="3.4" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M9.4 20.2h5.2" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" opacity=".55"/></symbol>
+    <symbol id="i-relic" viewBox="0 0 24 24"><path d="m12 2.4 7.6 7.1L12 21.6 4.4 9.5 12 2.4Z" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/><path d="M4.9 9.8h14.2M12 2.8v18.2M8.2 9.7 12 2.8l3.8 6.9L12 21.2 8.2 9.7Z" fill="none" stroke="currentColor" stroke-width="1.1" opacity=".72"/></symbol>
+    <symbol id="i-chest" viewBox="0 0 24 24"><path d="M3 10.5c0-2 1.6-3.5 3.5-3.5h11c2 0 3.5 1.6 3.5 3.5v7c0 1.7-1.3 3-3 3H6c-1.7 0-3-1.3-3-3v-7Z" fill="none" stroke="currentColor" stroke-width="1.7"/><path d="M3.2 10.6h17.6M12 7v13M9.5 13.3h5" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><rect x="9.3" y="12" width="5.4" height="4.4" rx="1" fill="none" stroke="currentColor" stroke-width="1.4"/></symbol>
+    <symbol id="i-sonar" viewBox="0 0 24 24"><circle cx="12" cy="12" r="2" fill="currentColor"/><path d="M7.3 16.7a6.6 6.6 0 0 1 0-9.4M16.7 7.3a6.6 6.6 0 0 1 0 9.4M4.2 19.8a11 11 0 0 1 0-15.6M19.8 4.2a11 11 0 0 1 0 15.6" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></symbol>
+    <symbol id="i-boost" viewBox="0 0 24 24"><path d="m5 6 6.5 6L5 18M12.5 6 19 12l-6.5 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="i-upgrade" viewBox="0 0 24 24"><path d="m12 2.7 8 4.6v9.4l-8 4.6-8-4.6V7.3l8-4.6Z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><path d="M12 16.5V8m0 0L8.4 11.6M12 8l3.6 3.6" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="i-pause" viewBox="0 0 24 24"><rect x="6.5" y="4" width="4" height="16" rx="1.4" fill="currentColor"/><rect x="13.5" y="4" width="4" height="16" rx="1.4" fill="currentColor"/></symbol>
+    <symbol id="i-play" viewBox="0 0 24 24"><path d="M7 4.3c0-.9 1-1.4 1.7-.9l11 7.7c.6.4.6 1.4 0 1.8l-11 7.7c-.7.5-1.7 0-1.7-.9V4.3Z" fill="currentColor"/></symbol>
+    <symbol id="i-sound" viewBox="0 0 24 24"><path d="M4 9.2h3.7L13 5v14l-5.3-4.2H4V9.2Z" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/><path d="M16.2 8.4a5 5 0 0 1 0 7.2M18.8 5.6a8.8 8.8 0 0 1 0 12.8" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></symbol>
+    <symbol id="i-muted" viewBox="0 0 24 24"><path d="M4 9.2h3.7L13 5v14l-5.3-4.2H4V9.2Z" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/><path d="m16.4 9.2 4.4 4.4m0-4.4-4.4 4.4" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></symbol>
+    <symbol id="i-close" viewBox="0 0 24 24"><path d="m5.8 5.8 12.4 12.4M18.2 5.8 5.8 18.2" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></symbol>
+    <symbol id="i-arrow" viewBox="0 0 24 24"><path d="M4.5 12h14m0 0-5.4-5.4M18.5 12l-5.4 5.4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="i-warning" viewBox="0 0 24 24"><path d="M12 3.4 22 20.4H2L12 3.4Z" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/><path d="M12 9v5m0 3v.2" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></symbol>
+    <symbol id="i-anchor" viewBox="0 0 24 24"><circle cx="12" cy="5" r="2.4" fill="none" stroke="currentColor" stroke-width="1.7"/><path d="M12 7.5V21M5 12H2.5c0 5.2 4.2 9 9.5 9s9.5-3.8 9.5-9H19M8 9.5h8" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></symbol>
+    <symbol id="i-lock" viewBox="0 0 24 24"><rect x="4.5" y="10" width="15" height="11" rx="2.4" fill="none" stroke="currentColor" stroke-width="1.7"/><path d="M8 10V7.4a4 4 0 1 1 8 0V10" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></symbol>
+  </svg>
+
+  <main id="app" aria-label="Deep Ocean game">
+    <canvas id="scene" aria-label="Underwater world" role="img"></canvas>
+
+    <div class="screen-fx" aria-hidden="true">
+      <div class="fx-vignette"></div>
+      <div class="fx-grain"></div>
+      <div class="fx-scan"></div>
+    </div>
+
+    <section id="hud" class="hud is-hidden" aria-label="Submarine status">
+      <div class="hud-left">
+        <div class="status-panel glass">
+          <div class="status-row" id="oxygen-row">
+            <span class="status-icon oxygen"><svg class="icon"><use href="#i-oxygen"/></svg></span>
+            <div class="status-main">
+              <div class="status-line"><span>OXYGEN</span><b id="oxygen-value">100</b></div>
+              <div class="meter oxygen-meter"><i id="oxygen-fill"></i><span id="oxygen-ghost"></span></div>
+            </div>
+          </div>
+          <div class="status-row" id="hull-row">
+            <span class="status-icon hull"><svg class="icon"><use href="#i-hull"/></svg></span>
+            <div class="status-main">
+              <div class="status-line"><span>HULL</span><b id="hull-value">100</b></div>
+              <div class="meter hull-meter"><i id="hull-fill"></i><span id="hull-ghost"></span></div>
+            </div>
+          </div>
+          <div class="status-foot">
+            <div class="zone-readout">
+              <span class="zone-pip"></span>
+              <span id="zone-name">SUNLIT SHALLOWS</span>
+            </div>
+            <span id="depth-value" class="depth-value">0 m</span>
+          </div>
+        </div>
+
+        <div id="objective-card" class="objective glass">
+          <div class="objective-head"><span class="objective-kicker">EXPEDITION</span><span id="objective-count">01</span></div>
+          <p id="objective-text">Find the sunken cache</p>
+          <div class="objective-bar"><i id="objective-fill"></i></div>
+        </div>
+
+        <div id="pressure-warning" class="pressure-warning is-hidden">
+          <svg class="icon"><use href="#i-warning"/></svg>
+          <div><strong>HULL PRESSURE EXCEEDED</strong><span id="rating-text">Rated to 480 m</span></div>
+        </div>
+      </div>
+
+      <div class="hud-right">
+        <div class="resource-row">
+          <div class="resource-chip" title="Salvage"><svg class="icon"><use href="#i-salvage"/></svg><span id="salvage-value">0</span><small>scrap</small></div>
+          <div class="resource-chip relic" title="Relics recovered"><svg class="icon"><use href="#i-relic"/></svg><span id="relic-value">0</span><small>relics</small></div>
+          <div class="resource-chip" title="Treasures opened"><svg class="icon"><use href="#i-chest"/></svg><span id="chest-value">0/7</span><small>caches</small></div>
+        </div>
+        <div class="top-actions">
+          <button id="upgrade-btn" class="icon-btn" aria-label="Open fabricator" title="Fabricator [U]">
+            <svg class="icon"><use href="#i-upgrade"/></svg><span class="btn-tip">FABRICATOR</span>
+          </button>
+          <button id="sound-btn" class="icon-btn" aria-label="Toggle sound" title="Sound">
+            <svg class="icon sound-on"><use href="#i-sound"/></svg><svg class="icon sound-off"><use href="#i-muted"/></svg>
+          </button>
+          <button id="pause-btn" class="icon-btn" aria-label="Pause game" title="Pause [Esc]">
+            <svg class="icon"><use href="#i-pause"/></svg>
+          </button>
+        </div>
+      </div>
+
+      <div class="depth-gauge" aria-label="Ocean depth">
+        <div class="gauge-line"></div>
+        <div class="gauge-zone z0"><span>0</span></div>
+        <div class="gauge-zone z1"><span>375</span></div>
+        <div class="gauge-zone z2"><span>850</span></div>
+        <div class="gauge-zone z3"><span>1325</span></div>
+        <div class="gauge-zone z4"><span>1850</span></div>
+        <div class="gauge-rating" id="gauge-rating"></div>
+        <div class="gauge-marker" id="gauge-marker"><span id="gauge-marker-label">0m</span><i></i></div>
+      </div>
+
+      <div class="action-bar desktop-actions">
+        <button id="boost-btn" class="action-btn" title="Boost [Shift]">
+          <svg class="icon"><use href="#i-boost"/></svg><span>BOOST</span><kbd>SHIFT</kbd>
+        </button>
+        <button id="sonar-btn" class="action-btn" title="Sonar pulse [Space]">
+          <svg class="icon"><use href="#i-sonar"/></svg><span>SONAR</span><kbd>SPACE</kbd>
+          <i class="cooldown" id="sonar-cooldown"></i>
+        </button>
+      </div>
+
+      <div id="interact-wrap" class="interact-wrap is-hidden">
+        <button id="interact-btn" class="interact-btn">
+          <span class="keycap">E</span>
+          <span class="interact-copy"><small>SUNKEN CACHE</small><strong>Open chest</strong></span>
+          <svg class="icon"><use href="#i-arrow"/></svg>
+        </button>
+      </div>
+
+      <div id="zone-banner" class="zone-banner is-hidden">
+        <span class="zone-banner-kicker">NOW ENTERING</span>
+        <h2 id="zone-banner-title">Sunlit Shallows</h2>
+        <span id="zone-banner-sub" class="zone-banner-sub">0 — 375 m · light and coral</span>
+        <div class="zone-banner-line"><i></i></div>
+      </div>
+
+      <div id="toast-stack" class="toast-stack" aria-live="polite"></div>
+
+      <div id="save-indicator" class="save-indicator">SAVED</div>
+
+      <div id="touch-controls" class="touch-controls" aria-hidden="true">
+        <div id="joystick" class="joystick">
+          <div class="joystick-ring"></div>
+          <div class="joystick-knob" id="joystick-knob"><span></span></div>
+          <span class="joystick-hint">SWIM</span>
+        </div>
+        <div class="touch-actions">
+          <button id="touch-upgrade" class="touch-btn sub" aria-label="Fabricator"><svg class="icon"><use href="#i-upgrade"/></svg></button>
+          <button id="touch-boost" class="touch-btn boost" aria-label="Boost"><svg class="icon"><use href="#i-boost"/></svg><span>BOOST</span></button>
+          <button id="touch-sonar" class="touch-btn sonar" aria-label="Sonar pulse"><svg class="icon"><use href="#i-sonar"/></svg><span>SONAR</span><i class="cooldown" id="touch-sonar-cooldown"></i></button>
+        </div>
+      </div>
+    </section>
+
+    <section id="title-screen" class="title-screen">
+      <div class="title-shade"></div>
+      <header class="title-top">
+        <div class="brand">
+          <span class="brand-mark"><svg class="icon"><use href="#i-anchor"/></svg></span>
+          <div><strong>DEEP OCEAN</strong><small>FIELD EXPEDITION 07</small></div>
+        </div>
+        <div class="title-top-right">
+          <span class="status-dot"></span> SURFACE LINK · STABLE
+        </div>
+      </header>
+
+      <div class="title-content">
+        <div class="eyebrow"><span class="eyebrow-line"></span>AN UNDERWATER SURVIVAL EXPEDITION<span class="eyebrow-line"></span></div>
+        <h1 class="game-title"><span>DEEP</span><em>OCEAN</em></h1>
+        <div class="title-rule"><i></i><svg class="icon"><use href="#i-relic"/></svg><i></i></div>
+        <p class="tagline">The light ends at four hundred metres.<br/><strong>You don't.</strong></p>
+        <p class="title-blurb">Pilot a salvage submarine into a drowned world. Harvest what the deep has buried, keep your air, and come back with something worth the risk.</p>
+        <div class="title-actions">
+          <button id="start-btn" class="primary-btn" type="button">
+            <span class="primary-label">Start</span>
+            <span class="primary-icon"><svg class="icon"><use href="#i-arrow"/></svg></span>
+          </button>
+          <button id="new-btn" class="ghost-btn is-hidden" type="button">New expedition</button>
+        </div>
+        <div id="save-summary" class="save-summary is-hidden">
+          <span class="save-summary-label">LAST DIVE</span>
+          <b id="save-depth">—</b>
+          <span class="dot">·</span>
+          <span id="save-salvage">—</span>
+          <span class="dot">·</span>
+          <span id="save-chests">—</span>
+        </div>
+        <div id="title-hint" class="title-hint">Press <kbd>ENTER</kbd> to dive</div>
+      </div>
+
+      <footer class="title-footer">
+        <div class="control-hints">
+          <span><kbd>WASD</kbd><small>SWIM</small></span>
+          <span><kbd>SHIFT</kbd><small>BOOST</small></span>
+          <span><kbd>SPACE</kbd><small>SONAR</small></span>
+          <span><kbd>E</kbd><small>OPEN</small></span>
+          <span><kbd>U</kbd><small>FABRICATOR</small></span>
+        </div>
+        <div class="title-credit">SOUND ON FOR BEST RESULTS <span class="dot">·</span> PROGRESS SAVES AUTOMATICALLY</div>
+      </footer>
+      <div class="corner corner-tl"></div><div class="corner corner-tr"></div>
+      <div class="corner corner-bl"></div><div class="corner corner-br"></div>
+    </section>
+
+    <section id="fabricator" class="modal is-hidden" aria-label="Submarine fabricator">
+      <div class="modal-backdrop"></div>
+      <div class="fabricator-panel">
+        <header class="panel-head">
+          <div class="panel-title">
+            <span class="panel-kicker">SUBMARINE / REFIT BAY</span>
+            <h2>Fabricator</h2>
+            <p>Spend recovered salvage on permanent systems. Refits are instant.</p>
+          </div>
+          <div class="panel-money">
+            <span>AVAILABLE SALVAGE</span>
+            <strong><svg class="icon"><use href="#i-salvage"/></svg><span id="fab-salvage">0</span></strong>
+          </div>
+          <button class="close-btn" data-close="fabricator" aria-label="Close fabricator"><svg class="icon"><use href="#i-close"/></svg></button>
+        </header>
+        <div class="ship-strip">
+          <div class="ship-mini"><span class="ship-mini-glow"></span><span class="ship-mini-body"></span><span class="ship-mini-dome"></span></div>
+          <div class="ship-stats">
+            <div><span>OXYGEN</span><b id="fab-stat-oxygen">100</b></div>
+            <div><span>HULL</span><b id="fab-stat-hull">100</b></div>
+            <div><span>TOP SPEED</span><b id="fab-stat-speed">210</b></div>
+            <div><span>RATED DEPTH</span><b id="fab-stat-depth">480 m</b></div>
+          </div>
+          <button id="repair-btn" class="repair-btn" type="button"><span>REPAIR HULL</span><small id="repair-cost">20 scrap · +50</small></button>
+        </div>
+        <div id="upgrade-grid" class="upgrade-grid"></div>
+        <footer class="panel-foot">
+          <span><svg class="icon"><use href="#i-relic"/></svg> Relics are kept at the surface. Salvage is spent here.</span>
+          <span class="panel-hint">PRESS <kbd>U</kbd> OR <kbd>ESC</kbd> TO CLOSE</span>
+        </footer>
+      </div>
+    </section>
+
+    <section id="pause-screen" class="modal is-hidden" aria-label="Paused">
+      <div class="modal-backdrop"></div>
+      <div class="pause-panel">
+        <span class="panel-kicker">EXPEDITION SUSPENDED</span>
+        <h2>Paused</h2>
+        <div class="pause-stats">
+          <div><span>DEPTH</span><b id="pause-depth">0 m</b></div>
+          <div><span>CACHES</span><b id="pause-chests">0 / 7</b></div>
+          <div><span>DIVE TIME</span><b id="pause-time">0:00</b></div>
+        </div>
+        <div class="pause-actions">
+          <button id="resume-btn" class="primary-btn compact" type="button"><span class="primary-label">Resume</span><span class="primary-icon"><svg class="icon"><use href="#i-play"/></svg></span></button>
+          <button id="pause-save-btn" class="ghost-btn" type="button">Save progress</button>
+          <button id="pause-title-btn" class="ghost-btn" type="button">Save &amp; return to title</button>
+        </div>
+        <p class="pause-note">Your expedition is saved automatically every few seconds.</p>
+      </div>
+    </section>
+
+    <section id="gameover-screen" class="modal is-hidden gameover" aria-label="Hull breached">
+      <div class="modal-backdrop"></div>
+      <div class="gameover-panel">
+        <span class="panel-kicker danger">CRITICAL FAILURE</span>
+        <h2>Hull breached</h2>
+        <p>The pressure got through. Your emergency beacon is pulling you back to the shallows — some salvage was lost on the way up.</p>
+        <div class="gameover-stats">
+          <div><span>FINAL DEPTH</span><b id="over-depth">0 m</b></div>
+          <div><span>CACHES</span><b id="over-chests">0 / 7</b></div>
+          <div><span>SALVAGE LOST</span><b id="over-lost">0</b></div>
+        </div>
+        <button id="respawn-btn" class="primary-btn" type="button"><span class="primary-label">Resurface</span><span class="primary-icon"><svg class="icon"><use href="#i-anchor"/></svg></span></button>
+        <p class="pause-note">Upgrades and recovered relics are safe.</p>
+      </div>
+    </section>
+
+    <section id="victory-screen" class="modal is-hidden" aria-label="Expedition complete">
+      <div class="modal-backdrop"></div>
+      <div class="victory-panel">
+        <div class="victory-glow"></div>
+        <span class="panel-kicker">EXPEDITION COMPLETE</span>
+        <h2>The Leviathan's Relic</h2>
+        <p>You brought back the last relic from the abyss. The survey office will call it a miracle. You know it was a long way down and a longer way back.</p>
+        <div class="victory-stats">
+          <div><span>DEEPEST DIVE</span><b id="victory-depth">0 m</b></div>
+          <div><span>CACHES RECOVERED</span><b id="victory-chests">7 / 7</b></div>
+          <div><span>SALVAGE</span><b id="victory-salvage">0</b></div>
+        </div>
+        <div class="victory-actions">
+          <button id="victory-continue" class="primary-btn compact" type="button"><span class="primary-label">Keep exploring</span><span class="primary-icon"><svg class="icon"><use href="#i-arrow"/></svg></span></button>
+          <button id="victory-title" class="ghost-btn" type="button">Return to surface</button>
+        </div>
+      </div>
+    </section>
+
+    <div id="rotate-hint" class="rotate-hint">
+      <svg class="icon"><use href="#i-warning"/></svg>
+      <span>Deep Ocean plays best in portrait on a phone. Turn your device upright or keep playing in landscape.</span>
+    </div>
+  </main>
+
+  <noscript><div class="noscript">Deep Ocean needs JavaScript enabled to dive.</div></noscript>
+  <script type="module" src="./js/main.js"></script>
+</body>
+</html>
