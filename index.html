@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="theme-color" content="#1d2a20" />
+  <title>Kingdom Builder — Valewood</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 72'%3E%3Cpath d='M32 2 60 12v24c0 17-12 28-28 34C16 64 4 53 4 36V12L32 2Z' fill='%23233a2d' stroke='%23d7b25e' stroke-width='3'/%3E%3Cpath d='M18 28l4-7 5 5 5-10 5 10 5-5 4 7v5H18v-5Z' fill='%23e3bd63'/%3E%3Cpath d='M23 35h18v9c0 5-4 8-9 10-5-2-9-5-9-10v-9Z' fill='%23b4452f'/%3E%3C/svg%3E" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div id="game" class="game">
+    <canvas id="worldBg" class="world-layer" aria-hidden="true"></canvas>
+    <canvas id="worldMap" class="world-layer" aria-hidden="true"></canvas>
+    <canvas id="world" aria-label="Isometric kingdom map"></canvas>
+
+    <header class="hud">
+      <div class="brand">
+        <div class="crest" aria-hidden="true">
+          <svg viewBox="0 0 64 72">
+            <path d="M32 2 60 12v24c0 17-12 28-28 34C16 64 4 53 4 36V12L32 2Z" fill="#233a2d" stroke="#d7b25e" stroke-width="2.4"/>
+            <path d="M32 8 54 16v20c0 13-9 22-22 28C19 58 10 49 10 36V16L32 8Z" fill="#35533e" stroke="#8c6d34" stroke-width="1"/>
+            <path d="M18 28l4-7 5 5 5-10 5 10 5-5 4 7v5H18v-5Z" fill="#e3bd63" stroke="#8e6322" stroke-width="1.2"/>
+            <path d="M23 35h18v9c0 5-4 8-9 10-5-2-9-5-9-10v-9Z" fill="#b4452f" stroke="#6e2519" stroke-width="1.2"/>
+            <path d="M29 35v13M35 35v13M23 41h18" stroke="#e7c471" stroke-width="1.4"/>
+          </svg>
+        </div>
+        <div class="brand-copy">
+          <div class="eyebrow">The realm of</div>
+          <h1>Valewood</h1>
+        </div>
+        <div class="day-pill"><span class="sun-mini"></span><span id="dayLabel">Day 1</span><i></i><span id="seasonLabel">Highsun</span></div>
+      </div>
+
+      <div class="resource-bar" id="resourceBar" aria-label="Kingdom resources"></div>
+
+      <div class="hud-actions">
+        <button class="icon-btn save-btn" id="saveBtn" title="Save chronicle" aria-label="Save chronicle">
+          <svg viewBox="0 0 24 24"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2Z"/><path d="M17 21v-8H7v8M7 3v5h8"/></svg>
+        </button>
+        <button class="icon-btn" id="soundBtn" title="Toggle sound" aria-label="Toggle sound">
+          <svg class="sound-on" viewBox="0 0 24 24"><path d="M11 5 6 9H2v6h4l5 4V5Z"/><path d="M15.5 8.5a5 5 0 0 1 0 7M18.5 5.5a9 9 0 0 1 0 13"/></svg>
+          <svg class="sound-off" viewBox="0 0 24 24"><path d="M11 5 6 9H2v6h4l5 4V5Z"/><path d="m22 9-6 6M16 9l6 6"/></svg>
+        </button>
+        <button class="icon-btn realm-btn" id="realmBtn" title="Realm overview" aria-label="Open realm overview">
+          <svg viewBox="0 0 24 24"><path d="m3 8 4 3 5-7 5 7 4-3-2 12H5L3 8Z"/><path d="M5 20h14"/></svg>
+        </button>
+        <button class="icon-btn" id="menuBtn" title="Game menu" aria-label="Game menu">
+          <svg viewBox="0 0 24 24"><circle cx="12" cy="5" r="1.4"/><circle cx="12" cy="12" r="1.4"/><circle cx="12" cy="19" r="1.4"/></svg>
+        </button>
+      </div>
+    </header>
+
+    <aside class="side-panel left-panel" id="leftPanel">
+      <div class="panel-heading">
+        <span class="heading-rule"></span>
+        <span>Royal Chronicle</span>
+        <span class="heading-rule"></span>
+      </div>
+
+      <section class="level-card">
+        <div class="level-seal" id="levelSeal"><span id="levelNum">I</span></div>
+        <div class="level-main">
+          <div class="level-row"><h2 id="settlementName">Hamlet</h2><span id="levelTag">Level 1</span></div>
+          <div class="xp-track"><div class="xp-fill" id="xpFill"></div></div>
+          <div class="xp-copy"><span id="xpText">35 / 90 renown</span><span id="nextLevelText">Next: Village</span></div>
+        </div>
+      </section>
+
+      <section class="quest-block">
+        <div class="section-title"><span>Decrees</span><span class="quill-mark">✦</span></div>
+        <div class="quest-list" id="questList"></div>
+      </section>
+
+      <section class="happiness-block">
+        <div class="section-title"><span>Contentment</span><strong id="happyValue">78%</strong></div>
+        <div class="happy-meter"><div class="happy-fill" id="happyFill"></div><div class="happy-face" id="happyFace">☺</div></div>
+        <div class="happy-note" id="happyNote">Your people are content.</div>
+        <div class="tax-row">
+          <span>Taxes</span>
+          <div class="segmented" id="taxControl">
+            <button data-tax="low">Low</button>
+            <button data-tax="normal" class="active">Fair</button>
+            <button data-tax="high">High</button>
+          </div>
+        </div>
+        <button class="festival-btn" id="festivalBtn">
+          <span class="festival-icon">✦</span>
+          <span>Hold a festival<small>30 food · 25 gold</small></span>
+        </button>
+      </section>
+
+      <div class="autosave-line"><span class="pulse-dot"></span><span id="saveStatus">The chronicle is safe</span></div>
+    </aside>
+
+    <aside class="side-panel right-panel" id="rightPanel">
+      <div class="panel-heading">
+        <span class="heading-rule"></span>
+        <span>Steward's Ledger</span>
+        <span class="heading-rule"></span>
+      </div>
+      <div id="ledgerContent"></div>
+    </aside>
+
+    <div class="map-hint" id="mapHint"><span class="hint-key">✦</span><span>Choose a building below, then tap a grassy plot.</span></div>
+    <div class="toast-stack" id="toastStack" aria-live="polite"></div>
+
+    <nav class="build-dock" id="buildDock" aria-label="Building catalogue">
+      <div class="dock-top">
+        <div class="dock-title">
+          <span class="hammer-mini">⚒</span>
+          <div><strong>Build</strong><small id="buildSubtitle">Raise your kingdom</small></div>
+        </div>
+        <div class="dock-mode" id="dockMode">
+          <span class="mode-dot"></span>
+          <span id="modeText">Village view</span>
+        </div>
+        <button class="cancel-build" id="cancelBuild">Cancel <kbd>Esc</kbd></button>
+      </div>
+      <div class="build-scroll">
+        <div class="build-cards" id="buildCards"></div>
+      </div>
+    </nav>
+
+    <div class="selection-sheet" id="selectionSheet" aria-live="polite"></div>
+
+    <div class="modal-backdrop" id="modalBackdrop" hidden>
+      <div class="modal parchment-modal" id="modal">
+        <button class="modal-close" id="modalClose" aria-label="Close">×</button>
+        <div id="modalContent"></div>
+      </div>
+    </div>
+
+    <div class="loading-veil" id="loadingVeil">
+      <div class="loading-crest">
+        <svg viewBox="0 0 64 72"><path d="M32 2 60 12v24c0 17-12 28-28 34C16 64 4 53 4 36V12L32 2Z" fill="#233a2d" stroke="#d7b25e" stroke-width="2"/><path d="M18 28l4-7 5 5 5-10 5 10 5-5 4 7v5H18v-5Z" fill="#e3bd63"/></svg>
+      </div>
+      <div class="loading-title">Valewood</div>
+      <div class="loading-sub">Illuminating the chronicle…</div>
+    </div>
+  </div>
+
+  <script src="art-common.js"></script>
+  <script src="art-buildings.js"></script>
+  <script src="art-town.js"></script>
+  <script src="art-nature.js"></script>
+  <script src="game-data.js"></script>
+  <script src="game-render.js"></script>
+  <script src="game-ui.js"></script>
+</body>
+</html>
