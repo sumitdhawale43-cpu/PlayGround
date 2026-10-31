@@ -1,4 +1,46 @@
-# PlayGround
+# PERIPHERY
+
+A first-person browser horror game built around one rule: **it only moves when you are not looking at it.**
+
+You are inside SITE 07's abandoned observation wing. Recover three echoes, then return to the gate. The thing in the halls freezes whenever it enters your view — but holding its gaze tears reality apart. The longer you stare, the more the room glitches, whispers, bends, and eventually collapses.
+
+## Play
+
+There is no build step and no dependency install. Serve the folder over HTTP:
+
+```bash
+./start.sh
+# or
+python3 -m http.server 8080
+```
+
+Then open the printed URL. Audio starts after your first interaction; headphones are recommended.
+
+## Controls
+
+| Action | Desktop | Touch |
+| --- | --- | --- |
+| Move | `WASD` / arrow keys | left stick |
+| Look | mouse (click to capture) | drag the world |
+| Touch / interact | `E` | `TOUCH` |
+| Run | `Shift` | `RUN` |
+| Pause | `Esc` | `II` |
+| Mute | `M` | sound button |
+
+## The rules
+
+1. The monster cannot move while you can see it.
+2. Staring drains REALITY. Looking away lets it slowly recover.
+3. Low reality corrupts the facility and can kill you outright.
+4. Collect all three echoes to unlock the gate, then reach it.
+
+## Tech
+
+- Canvas raycaster with procedural textures and sprites
+- A* pathfinding for the stalker
+- Web Audio ambience and effects synthesized at runtime
+- Responsive layout with pointer-lock and touch controls
+- Vanilla ES modules, no framework or network assets
 
 <!-- omgithub:readme:start -->
 ## 🚀 Build, play, and remix with OMGithub

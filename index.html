@@ -1,0 +1,195 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no" />
+    <meta name="theme-color" content="#050606" />
+    <meta name="description" content="PERIPHERY — a first-person horror game about looking, and what looking costs." />
+    <title>PERIPHERY — do not look away</title>
+    <link rel="icon" href="favicon.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div id="stage">
+      <canvas id="world" aria-label="A dark concrete observation facility, seen in first person."></canvas>
+
+      <div id="effects" aria-hidden="true">
+        <div class="grain"></div>
+        <div class="scanlines"></div>
+        <div class="vignette"></div>
+        <div class="chroma"></div>
+        <div class="edge-alert"></div>
+        <svg id="cracks" viewBox="0 0 1440 900" preserveAspectRatio="xMidYMid slice">
+          <g fill="none" stroke="rgba(197, 213, 192, .34)" stroke-width="1">
+            <path d="M1110 -20 L1084 143 L1119 204 L1062 332 L1098 411 L1037 589 L1080 732" />
+            <path d="M1084 143 L998 169 L940 139" />
+            <path d="M1119 204 L1190 188 L1233 228" />
+            <path d="M1062 332 L980 298 L930 344 L870 313" />
+            <path d="M1098 411 L1160 465 L1142 553" />
+            <path d="M1037 589 L962 548 L910 606" />
+            <path d="M-30 620 L120 592 L186 647 L281 621 L360 679" />
+            <path d="M186 647 L174 731" />
+            <path d="M281 621 L298 540" />
+          </g>
+          <g fill="none" stroke="rgba(147, 31, 24, .22)" stroke-width="3">
+            <path d="M1119 204 L1107 262 L1137 289" />
+            <path d="M1062 332 L1054 396" />
+            <path d="M1080 732 L1009 779" />
+          </g>
+        </svg>
+      </div>
+
+      <div id="flash" aria-hidden="true"></div>
+      <div id="jumpscare" aria-hidden="true"><div class="jumpscare-face"></div><div class="jumpscare-static"></div></div>
+
+      <section id="title-screen" class="screen title-screen">
+        <header class="title-meta">
+          <span>SITE 07 <i>/</i> OBSERVATION WING</span>
+          <span class="title-rec"><b></b> REC 03:17:44</span>
+          <span class="title-signal">NO SIGNAL</span>
+        </header>
+
+        <div class="title-center">
+          <div class="eyemark" aria-hidden="true">
+            <svg viewBox="0 0 80 44">
+              <ellipse cx="40" cy="22" rx="33" ry="15" />
+              <circle cx="40" cy="22" r="10" />
+              <circle cx="40" cy="22" r="3.4" class="pupil" />
+              <path d="M7 22H0M80 22H73" />
+            </svg>
+          </div>
+          <p class="title-kicker">ANOMALOUS OBSERVATION UNIT <span>·</span> CASE 017</p>
+          <h1 class="title glitch" data-text="PERIPHERY">PERIPHERY</h1>
+          <p class="tagline">It only moves when you stop looking.</p>
+          <div class="title-rule"><span></span><i></i><span></span></div>
+          <p class="title-sub">Recover three echoes. Reach the gate.<br />Do not hold its gaze too long.</p>
+          <button id="start-btn" class="cta" type="button">
+            <span>ENTER THE HALLS</span><span class="cta-arrow" aria-hidden="true">→</span>
+          </button>
+          <p class="title-note">HEADPHONES RECOMMENDED <span>·</span> TOUCH SUPPORTED</p>
+        </div>
+
+        <footer class="title-footer">
+          <div class="rules" aria-label="Rules">
+            <p><b>01</b><span>It cannot move while you see it.</span></p>
+            <p><b>02</b><span>Staring unravels the room.</span></p>
+            <p><b>03</b><span>Three echoes open the gate.</span></p>
+          </div>
+          <div class="title-controls" aria-label="Controls">
+            <span><kbd>WASD</kbd> MOVE</span>
+            <span><kbd>MOUSE</kbd> LOOK</span>
+            <span><kbd>E</kbd> TOUCH</span>
+            <span><kbd>SHIFT</kbd> RUN</span>
+          </div>
+        </footer>
+      </section>
+
+      <div id="hud" class="hidden">
+        <header class="hud-top">
+          <div class="hud-meta">
+            <span class="hud-site">SITE 07 <i>/</i> OBSERVATION WING</span>
+            <span id="zone-label" class="hud-zone">OBSERVATION SPINE</span>
+          </div>
+
+          <div id="reality-block" class="reality-block">
+            <div class="reality-label">
+              <span id="reality-name">REALITY</span>
+              <span id="reality-value">100</span>
+            </div>
+            <div class="reality-track">
+              <div id="reality-fill" class="reality-fill"></div>
+              <div class="reality-ticks" aria-hidden="true"></div>
+            </div>
+            <div id="reality-state" class="reality-state">STABLE</div>
+          </div>
+
+          <div class="hud-echo">
+            <span class="hud-site">ECHOES</span>
+            <div id="echo-pips" class="echo-pips" aria-label="0 of 3 echoes recovered">
+              <i></i><i></i><i></i>
+            </div>
+          </div>
+        </header>
+
+        <div id="gaze" class="gaze" aria-hidden="true">
+          <svg viewBox="0 0 64 64">
+            <circle class="gaze-bg" cx="32" cy="32" r="27" />
+            <circle id="gaze-progress" class="gaze-progress" cx="32" cy="32" r="27" />
+          </svg>
+          <span class="gaze-dot"></span>
+          <span id="gaze-word" class="gaze-word">HELD</span>
+        </div>
+
+        <div id="zone-toast" class="zone-toast" aria-live="polite"></div>
+        <div id="subtitle" class="subtitle" aria-live="polite"></div>
+        <div id="prompt" class="prompt hidden"><kbd>E</kbd><span id="prompt-text">TAKE THE ECHO</span></div>
+
+        <div id="stamina" class="stamina" aria-hidden="true"><i id="stamina-fill"></i></div>
+
+        <aside id="map-wrap" class="map-wrap" aria-label="Facility schematic">
+          <div class="map-head"><span>SITE SCHEMATIC</span><span class="map-north">N ↑</span></div>
+          <canvas id="minimap" width="280" height="200"></canvas>
+          <div class="map-foot"><span id="map-echo-count">0 / 3 ECHOES</span><span id="map-gate">GATE SEALED</span></div>
+        </aside>
+
+        <div id="controls-hint" class="controls-hint">
+          <span><kbd>WASD</kbd> MOVE</span>
+          <span><kbd>MOUSE</kbd> LOOK</span>
+          <span><kbd>E</kbd> TOUCH</span>
+          <span><kbd>SHIFT</kbd> RUN</span>
+          <span><kbd>ESC</kbd> PAUSE</span>
+        </div>
+
+        <div id="touch-ui" class="touch-ui" aria-hidden="true">
+          <div id="joystick" class="joystick"><div id="joystick-knob" class="joystick-knob"></div></div>
+          <div class="touch-actions">
+            <button id="run-btn" class="touch-btn run-btn" type="button">RUN</button>
+            <button id="action-btn" class="touch-btn action-btn" type="button">TOUCH</button>
+            <button id="pause-btn" class="touch-btn pause-btn" type="button">II</button>
+          </div>
+        </div>
+      </div>
+
+      <section id="pause-screen" class="screen pause-screen hidden">
+        <div class="pause-panel">
+          <p class="end-kicker">SIGNAL INTERRUPTED</p>
+          <h2>PAUSED</h2>
+          <p class="pause-copy">The halls are still there.<br />It is still counting.</p>
+          <div class="end-actions">
+            <button id="resume-btn" class="cta small" type="button"><span>RETURN</span><span class="cta-arrow">→</span></button>
+            <button id="restart-btn" class="text-btn" type="button">RESTART RUN</button>
+            <button id="quit-btn" class="text-btn" type="button">ABANDON TO TITLE</button>
+          </div>
+          <p class="pause-controls"><kbd>WASD</kbd> MOVE <kbd>MOUSE</kbd> LOOK <kbd>E</kbd> TOUCH <kbd>SHIFT</kbd> RUN</p>
+        </div>
+      </section>
+
+      <section id="end-screen" class="screen end-screen hidden">
+        <div class="end-panel">
+          <p id="end-kicker" class="end-kicker">FEED TERMINATED</p>
+          <h2 id="end-title">YOU WERE SEEN.</h2>
+          <p id="end-copy" class="end-copy"></p>
+          <div class="end-stats">
+            <div><span>TIME IN THE HALLS</span><b id="stat-time">00:00</b></div>
+            <div><span>ECHOES RECOVERED</span><b id="stat-echoes">0 / 3</b></div>
+            <div><span>GAZE HELD</span><b id="stat-stare">0.0s</b></div>
+            <div><span>REALITY REMAINING</span><b id="stat-reality">0%</b></div>
+          </div>
+          <div class="end-actions">
+            <button id="again-btn" class="cta small" type="button"><span>RE-ENTER</span><span class="cta-arrow">→</span></button>
+            <button id="end-title-btn" class="text-btn" type="button">RETURN TO TITLE</button>
+          </div>
+        </div>
+      </section>
+
+      <button id="mute-btn" class="mute-btn" type="button" aria-pressed="false" title="Toggle sound (M)">
+        <span class="mute-icon" aria-hidden="true"></span><span id="mute-label">SOUND</span>
+      </button>
+
+      <div id="rotate-hint" class="rotate-hint">LANDSCAPE IS RECOMMENDED</div>
+    </div>
+
+    <noscript>This recording requires JavaScript.</noscript>
+    <script type="module" src="js/game.js"></script>
+  </body>
+</html>
