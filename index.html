@@ -1,0 +1,320 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+  <meta name="theme-color" content="#031521" />
+  <meta name="description" content="DEEP OCEAN — a hand-crafted underwater survival expedition. Explore five ocean zones, gather salvage, recover lost relics and keep your submersible alive." />
+  <title>DEEP OCEAN — Underwater Survival</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23031521'/%3E%3Cpath d='M8 40c8-9 16-9 24 0s16 9 24 0' fill='none' stroke='%234fe0c8' stroke-width='4' stroke-linecap='round'/%3E%3Ccircle cx='32' cy='24' r='7' fill='%23ffc46b'/%3E%3C/svg%3E" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div id="game-shell">
+    <canvas id="game" aria-label="Deep Ocean game world"></canvas>
+    <div class="water-overlay" aria-hidden="true"></div>
+    <div class="screen-grain" aria-hidden="true"></div>
+
+    <!-- ══════════════ IN-GAME HUD ══════════════ -->
+    <div id="hud" class="hud is-hidden">
+      <header class="hud-top">
+        <section class="zone-card glass" aria-live="polite">
+          <span class="zone-kicker"><i class="live-dot"></i> CURRENT ZONE</span>
+          <div class="zone-name-row">
+            <h2 id="zoneName">Sunlit Shallows</h2>
+            <span id="zoneDepth" class="zone-depth">0 m</span>
+          </div>
+          <div class="zone-meta">
+            <span id="zoneDanger" class="danger-chip">LOW RISK</span>
+            <span id="zonePressure" class="pressure-chip">PRESSURE OK</span>
+          </div>
+        </section>
+
+        <section class="vitals glass" aria-label="Submersible vitals">
+          <div class="vital oxygen">
+            <div class="vital-label">
+              <span class="vital-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24"><path d="M12 2.5c3.2 4.4 6 8 6 11.2A6 6 0 0 1 6 13.7c0-3.2 2.8-6.8 6-11.2Z"/><path d="M9.2 14.2a2.8 2.8 0 0 0 2.8 2.8"/></svg>
+              </span>
+              <span>OXYGEN</span>
+              <strong id="o2Text">100%</strong>
+            </div>
+            <div class="bar-track"><div id="o2Fill" class="bar-fill o2-fill"></div><span class="bar-shine"></span></div>
+            <div id="o2Warn" class="vital-warn">LOW OXYGEN — SURFACE OR FIND A VENT</div>
+          </div>
+          <div class="vital hull">
+            <div class="vital-label">
+              <span class="vital-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24"><path d="M12 2.8 20 6v6.1c0 4.6-3.2 7.8-8 9.1-4.8-1.3-8-4.5-8-9.1V6l8-3.2Z"/><path d="M8.5 12h2.2l1.2-2.6 1.6 5 1.2-2.4h1.8"/></svg>
+              </span>
+              <span>HULL INTEGRITY</span>
+              <strong id="hullText">100%</strong>
+            </div>
+            <div class="bar-track"><div id="hullFill" class="bar-fill hull-fill"></div><span class="bar-shine"></span></div>
+            <div id="hullWarn" class="vital-warn">HULL CRITICAL — REPAIR AT THE AURORA</div>
+          </div>
+        </section>
+
+        <section class="top-right">
+          <div class="resource-row" aria-label="Collected resources">
+            <div class="resource-chip glass" title="Salvage">
+              <span class="res-ico scrap-ico" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M14.7 4.2a4.6 4.6 0 0 0-5.9 5.9l-4.6 4.6a1.6 1.6 0 0 0 0 2.3l2.8 2.8a1.6 1.6 0 0 0 2.3 0l4.6-4.6a4.6 4.6 0 0 0 5.9-5.9l-2.8 2.8-2.6-.7-.7-2.6 2.8-2.8Z"/></svg></span>
+              <b id="chipScrap">0</b><small>SALVAGE</small>
+            </div>
+            <div class="resource-chip glass" title="Pearls">
+              <span class="res-ico pearl-ico" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4.5 8.5c3.3-2.2 11.7-2.2 15 0v5.4c0 3.3-3.4 5.6-7.5 5.6s-7.5-2.3-7.5-5.6V8.5Z"/><circle cx="12" cy="12" r="3.6"/></svg></span>
+              <b id="chipPearl">0</b><small>PEARLS</small>
+            </div>
+            <div class="resource-chip glass" title="Crystals">
+              <span class="res-ico crystal-ico" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="m12 2.5 6.2 7.2L12 21.5 5.8 9.7 12 2.5Z"/><path d="M5.8 9.7h12.4M12 2.5v19"/></svg></span>
+              <b id="chipCrystal">0</b><small>CRYSTALS</small>
+            </div>
+          </div>
+          <div class="icon-row">
+            <button id="btnSonar" class="icon-btn glass" title="Sonar ping (F)" aria-label="Sonar ping">
+              <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="2"/><path d="M7.8 7.8a6 6 0 0 0 0 8.4M16.2 7.8a6 6 0 0 1 0 8.4M4.9 4.9a10 10 0 0 0 0 14.2M19.1 4.9a10 10 0 0 1 0 14.2"/></svg>
+            </button>
+            <button id="btnUpgrade" class="icon-btn glass" title="Upgrade bay (U)" aria-label="Open upgrade bay">
+              <svg viewBox="0 0 24 24"><path d="M4 7.5 12 3l8 4.5v9L12 21l-8-4.5v-9Z"/><path d="M12 12v9M4 7.5l8 4.5 8-4.5"/><path d="M12 3v9"/></svg>
+            </button>
+            <button id="btnMute" class="icon-btn glass" title="Toggle sound" aria-label="Toggle sound">
+              <svg viewBox="0 0 24 24"><path d="M4 9.5h3.5L12 5.5v13L7.5 14.5H4v-5Z"/><path class="sound-wave" d="M15.5 8.5a5 5 0 0 1 0 7M18 6a8.5 8.5 0 0 1 0 12"/><path class="sound-mute" d="m16 9 5 6M21 9l-5 6"/></svg>
+            </button>
+            <button id="btnPause" class="icon-btn glass" title="Pause (Esc)" aria-label="Pause game">
+              <svg viewBox="0 0 24 24"><path d="M8 5v14M16 5v14"/></svg>
+            </button>
+          </div>
+        </section>
+      </header>
+
+      <div id="depthRail" class="depth-rail glass" aria-label="Depth profile">
+        <div class="rail-head">DEPTH</div>
+        <div id="railBody" class="rail-body"></div>
+        <div id="depthMarker" class="depth-marker"><span id="markerDepth">0 m</span></div>
+      </div>
+
+      <section class="objective glass" aria-live="polite">
+        <span class="obj-kicker">EXPEDITION OBJECTIVE</span>
+        <p id="objectiveText">Recover the three lost relic shards.</p>
+        <div class="relic-pips" id="relicPips">
+          <span class="pip"></span><span class="pip"></span><span class="pip"></span>
+        </div>
+        <div id="baseCompass" class="base-compass"><span class="compass-arrow">↑</span><span>THE AURORA</span></div>
+      </section>
+
+      <div id="prompt" class="interact-prompt glass is-hidden">
+        <span class="key-cap">E</span>
+        <span id="promptText">Collect salvage</span>
+      </div>
+
+      <div class="pulse-widget glass" aria-label="Pulse emitter">
+        <button id="btnPulseWidget" class="pulse-button" title="Pulse emitter (Q)" aria-label="Fire pulse emitter">
+          <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="2.2"/><path d="M8 8a5.6 5.6 0 0 0 0 8M16 8a5.6 5.6 0 0 1 0 8M5 5a9.8 9.8 0 0 0 0 14M19 5a9.8 9.8 0 0 1 0 14"/></svg>
+          <span id="pulseState">READY</span>
+        </button>
+      </div>
+
+      <div class="minimap-wrap glass">
+        <div class="mini-head"><span>SONAR MAP</span><span id="miniZone">SHALLOWS</span></div>
+        <canvas id="minimap" width="176" height="224" aria-label="Sonar map"></canvas>
+        <div class="mini-foot"><span class="mini-dot player-dot"></span>YOU <span class="mini-dot relic-dot"></span>RELIC <span class="mini-dot base-dot"></span>AURORA</div>
+      </div>
+
+      <div class="desktop-hints">
+        <span><b>WASD</b> swim</span><span><b>SHIFT</b> boost</span><span><b>E</b> interact</span><span><b>Q</b> pulse</span><span><b>U</b> upgrades</span><span><b>ESC</b> pause</span>
+      </div>
+
+      <div id="mobileControls" class="mobile-controls" aria-hidden="true">
+        <div id="joystick" class="joystick">
+          <div class="joystick-ring"></div>
+          <div id="joystickKnob" class="joystick-knob"><span></span></div>
+          <span class="joystick-label">SWIM</span>
+        </div>
+        <div class="mobile-actions">
+          <button id="btnMobileBoost" class="mobile-btn boost-btn" aria-label="Boost"><span>BOOST</span></button>
+          <button id="btnMobilePulse" class="mobile-btn pulse-btn" aria-label="Pulse emitter"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="2"/><path d="M8 8a5.6 5.6 0 0 0 0 8M16 8a5.6 5.6 0 0 1 0 8M5 5a9.8 9.8 0 0 0 0 14M19 5a9.8 9.8 0 0 1 0 14"/></svg><span>PULSE</span></button>
+          <button id="btnMobileInteract" class="mobile-btn interact-btn" aria-label="Interact"><span class="key-cap">E</span><span>USE</span></button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════════ TOASTS ══════════════ -->
+    <div id="toasts" class="toasts" aria-live="polite"></div>
+
+    <!-- ══════════════ MAIN MENU ══════════════ -->
+    <div id="menu" class="screen menu-screen">
+      <div class="menu-vignette"></div>
+      <div class="menu-inner">
+        <div class="menu-brand">
+          <div class="brand-mark">
+            <svg viewBox="0 0 32 32" aria-hidden="true"><path d="M16 2.5c5 6.8 9.5 12.4 9.5 17.4a9.5 9.5 0 0 1-19 0C6.5 14.9 11 9.3 16 2.5Z"/><path d="M11.5 19.5a4.5 4.5 0 0 0 4.5 4.5"/></svg>
+          </div>
+          <div>
+            <strong>NAUTILUS EXPEDITIONS</strong>
+            <span>DEEP SEA RESEARCH DIVISION · 07</span>
+          </div>
+        </div>
+
+        <div class="menu-columns">
+          <div class="menu-copy">
+            <div class="eyebrow"><span></span> AN UNDERWATER SURVIVAL EXPEDITION</div>
+            <h1 class="game-title">DEEP<br /><em>OCEAN</em></h1>
+            <p class="lede">The research vessel <b>Aurora</b> is gone. Five ocean zones lie beneath you, holding salvage, lost relics and things that have never seen the sun. Keep your oxygen. Keep your hull. Go deeper.</p>
+
+            <div class="menu-actions">
+              <button id="btnDive" class="btn primary">
+                <span id="diveLabel">BEGIN DIVE</span>
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+              </button>
+              <button id="btnNewDive" class="btn ghost is-hidden">NEW EXPEDITION</button>
+            </div>
+
+            <div class="menu-controls">
+              <span><b>WASD</b> / <b>ARROWS</b> swim</span>
+              <span><b>SHIFT</b> boost</span>
+              <span><b>E</b> interact</span>
+              <span><b>Q</b> pulse</span>
+              <span><b>U</b> upgrade</span>
+            </div>
+            <div class="menu-foot">
+              <span class="status-light"></span><span id="saveStatus">NO EXPEDITION LOG FOUND</span>
+              <button id="btnMenuMute" class="text-btn" aria-label="Toggle sound">SOUND: ON</button>
+            </div>
+          </div>
+
+          <aside class="expedition-card glass">
+            <div class="card-top">
+              <span class="card-kicker">EXPEDITION LOG</span>
+              <span id="cardStatus" class="card-status">STANDBY</span>
+            </div>
+            <div class="card-depth">
+              <span class="depth-label">DEEPEST DIVE</span>
+              <strong id="cardDepth">0<span>m</span></strong>
+            </div>
+            <div class="card-divider"></div>
+            <div class="card-stats">
+              <div><span>RELIC SHARDS</span><b id="cardRelics">0 / 3</b></div>
+              <div><span>SALVAGE</span><b id="cardScrap">0</b></div>
+              <div><span>PEARLS</span><b id="cardPearl">0</b></div>
+              <div><span>CRYSTALS</span><b id="cardCrystal">0</b></div>
+            </div>
+            <div class="card-divider"></div>
+            <div class="card-brief">
+              <span class="card-kicker">DIVE BRIEF</span>
+              <ul>
+                <li>Recover 3 relic shards from the deep zones</li>
+                <li>Upgrade your submersible to survive pressure</li>
+                <li>Return to the Aurora to complete the expedition</li>
+              </ul>
+            </div>
+            <div class="card-zones" id="cardZones"></div>
+          </aside>
+        </div>
+
+        <div class="menu-ticker">
+          <span>LAT 47° 09′ N</span><span>LON 12° 44′ W</span><span>SEA STATE 4</span><span>DEPTH 0 M</span><span>O₂ NOMINAL</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════════ PAUSE ══════════════ -->
+    <div id="pause" class="screen modal-screen is-hidden">
+      <div class="modal-card pause-card">
+        <div class="modal-head">
+          <span class="card-kicker">DIVE SUSPENDED</span>
+          <h2>PAUSED</h2>
+          <p id="pauseSummary">Depth 0 m · Sunlit Shallows</p>
+        </div>
+        <div class="pause-actions">
+          <button id="btnResume" class="btn primary"><span>RESUME DIVE</span><svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button>
+          <button id="btnPauseUpgrade" class="btn ghost">UPGRADE BAY</button>
+          <button id="btnSaveNow" class="btn ghost">SAVE PROGRESS</button>
+          <button id="btnHelp" class="btn ghost">HOW TO PLAY</button>
+          <button id="btnReset" class="btn danger">RESET EXPEDITION</button>
+        </div>
+        <div id="helpPanel" class="help-panel is-hidden">
+          <div><b>Swim</b><span>WASD / arrow keys, or the left joystick. Hold Shift or BOOST to sprint — it burns oxygen faster.</span></div>
+          <div><b>Breathe</b><span>Survive on oxygen. Surface at the Aurora, or swim through bubble vents to refill. Zero oxygen damages the hull.</span></div>
+          <div><b>Survive</b><span>Jellyfish, sharks, eels and anglerfish hurt on contact. Fire a pulse to repel them. Watch pressure in deep zones.</span></div>
+          <div><b>Recover</b><span>Press E to collect salvage, pearls, crystals, chests and relic shards. Spend resources in the Upgrade Bay.</span></div>
+          <div><b>Return</b><span>Once all three relic shards are aboard, surface beside the Aurora to complete the expedition.</span></div>
+        </div>
+        <div class="modal-foot"><span>Progress saves automatically</span><span id="pauseClock">00:00</span></div>
+      </div>
+    </div>
+
+    <!-- ══════════════ UPGRADES ══════════════ -->
+    <div id="upgrades" class="screen modal-screen is-hidden">
+      <div class="modal-card upgrade-card">
+        <div class="modal-head upgrade-head">
+          <div>
+            <span class="card-kicker">AURORA DRONE BAY</span>
+            <h2>SUBMERSIBLE UPGRADES</h2>
+            <p>Resources are transferred instantly. The drone does the rest.</p>
+          </div>
+          <div class="upgrade-wallet">
+            <span><i class="wallet-ico scrap-ico"></i><b id="upScrap">0</b></span>
+            <span><i class="wallet-ico pearl-ico"></i><b id="upPearl">0</b></span>
+            <span><i class="wallet-ico crystal-ico"></i><b id="upCrystal">0</b></span>
+          </div>
+        </div>
+        <div id="upgradeGrid" class="upgrade-grid"></div>
+        <div class="modal-foot">
+          <span>Pressure rating improves with hull plating. Deep zones require it.</span>
+          <button id="btnCloseUpgrades" class="btn primary small"><span>BACK TO DIVE</span><svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════════ DEATH ══════════════ -->
+    <div id="death" class="screen modal-screen is-hidden">
+      <div class="modal-card death-card">
+        <div class="death-graphic" aria-hidden="true">
+          <svg viewBox="0 0 120 120"><circle cx="60" cy="60" r="48"/><path d="M42 52h10M68 52h10M46 76c8 6 20 6 28 0"/><path d="M22 28l10 10M98 28 88 38"/></svg>
+        </div>
+        <span class="card-kicker danger-text">CRITICAL FAILURE</span>
+        <h2>HULL BREACH</h2>
+        <p id="deathSummary">The pressure was too much. The Aurora recovered your escape pod.</p>
+        <div class="death-stats" id="deathStats"></div>
+        <div class="death-actions">
+          <button id="btnRespawn" class="btn primary"><span>RETURN TO THE AURORA</span><svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button>
+          <button id="btnDeathMenu" class="btn ghost">MAIN MENU</button>
+        </div>
+        <div class="modal-foot"><span>Upgrades and relic shards are preserved</span><span id="deathDepth">0 m</span></div>
+      </div>
+    </div>
+
+    <!-- ══════════════ VICTORY ══════════════ -->
+    <div id="victory" class="screen modal-screen is-hidden">
+      <div class="modal-card victory-card">
+        <div class="victory-rays" aria-hidden="true"></div>
+        <span class="card-kicker">EXPEDITION COMPLETE</span>
+        <h2>THE OCEAN REMEMBERS</h2>
+        <p>All three relic shards are aboard the Aurora. The signal beneath the trench has gone quiet — for now. The deep is still open to you.</p>
+        <div class="victory-relics" id="victoryRelics"></div>
+        <div class="victory-stats" id="victoryStats"></div>
+        <div class="death-actions">
+          <button id="btnContinueDive" class="btn primary"><span>CONTINUE EXPLORING</span><svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button>
+          <button id="btnVictoryMenu" class="btn ghost">MAIN MENU</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════════ CONFIRM ══════════════ -->
+    <div id="confirm" class="screen modal-screen confirm-screen is-hidden">
+      <div class="modal-card confirm-card">
+        <span class="card-kicker danger-text">IRREVERSIBLE</span>
+        <h2 id="confirmTitle">RESET EXPEDITION?</h2>
+        <p id="confirmText">All progress, resources and upgrades will be erased.</p>
+        <div class="death-actions">
+          <button id="btnConfirmYes" class="btn danger">YES, ERASE IT</button>
+          <button id="btnConfirmNo" class="btn ghost">KEEP MY PROGRESS</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="rotateHint" class="rotate-hint is-hidden">Rotate for a wider view</div>
+  </div>
+  <script type="module" src="src/main.js"></script>
+</body>
+</html>
