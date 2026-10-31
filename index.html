@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no" />
+<meta name="theme-color" content="#050713" />
+<title>TIME REWIND — Chrono Division</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23050b1a'/%3E%3Ccircle cx='32' cy='32' r='19' fill='none' stroke='%2357f2ff' stroke-width='3'/%3E%3Cpath d='M32 19v14l9 5' stroke='%2357f2ff' stroke-width='3' fill='none' stroke-linecap='round'/%3E%3C/svg%3E" />
+<link rel="preload" href="css/style.css" as="style" />
+<link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+<div id="app">
+  <canvas id="game" aria-label="Time Rewind game canvas"></canvas>
+  <div class="fx-scrim" aria-hidden="true"></div>
+  <div class="fx-scanlines" aria-hidden="true"></div>
+  <div class="fx-vignette" aria-hidden="true"></div>
+
+  <!-- ================= HUD ================= -->
+  <div id="hud" class="hud is-hidden" aria-live="polite">
+    <div class="hud-top">
+      <div class="hud-sector">
+        <span id="hud-number" class="hud-number">01</span>
+        <div class="hud-sector-copy">
+          <span class="hud-kicker">SECTOR</span>
+          <h2 id="hud-name">FIRST ECHO</h2>
+        </div>
+      </div>
+      <div class="hud-center">
+        <div id="hud-timer" class="hud-timer">00:00.00</div>
+        <div id="hud-checkpoint" class="hud-checkpoint"><span class="dot"></span> CHECKPOINT —</div>
+      </div>
+      <div class="hud-actions">
+        <button id="hud-mute" class="hud-icon" aria-label="Toggle sound">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9h4l5-4v14l-5-4H4z"/><path class="sound-wave" d="M16 8.5a5 5 0 0 1 0 7M19 6a9 9 0 0 1 0 12"/></svg>
+        </button>
+        <button id="hud-pause" class="hud-icon" aria-label="Pause">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14M16 5v14"/></svg>
+        </button>
+      </div>
+    </div>
+
+    <div class="hud-bottom">
+      <div class="energy-panel" id="energy-panel">
+        <div class="energy-head">
+          <span><i class="energy-spark"></i> CHRONO ENERGY</span>
+          <span id="energy-value">100%</span>
+        </div>
+        <div class="energy-track">
+          <div id="energy-fill" class="energy-fill"></div>
+          <div class="energy-ticks" aria-hidden="true"></div>
+        </div>
+        <div id="energy-hint" class="energy-hint">HOLD <kbd>R</kbd> / <kbd>SHIFT</kbd> TO REWIND</div>
+      </div>
+      <div class="core-panel">
+        <span class="core-icon" aria-hidden="true"></span>
+        <span id="hud-cores">0 / 3</span>
+        <span class="core-label">CHRONO CORES</span>
+      </div>
+    </div>
+
+    <div id="time-distortion" class="time-distortion" aria-hidden="true">
+      <div class="distortion-label"><span class="rec"></span> REWINDING</div>
+      <div id="rewind-seconds" class="rewind-seconds">−5.00s</div>
+    </div>
+
+    <div id="hint" class="hint is-hidden">
+      <div class="hint-kicker">FIELD NOTE</div>
+      <p id="hint-text"></p>
+    </div>
+
+    <div id="death-prompt" class="death-prompt is-hidden">
+      <div class="death-glyph" aria-hidden="true"></div>
+      <div class="death-kicker">TIMELINE FRACTURE</div>
+      <h2>TIME COLLAPSED</h2>
+      <p><span id="death-energy">100%</span> chrono energy available</p>
+      <div class="death-action"><span class="only-desktop"><kbd>HOLD R</kbd> or <kbd>SHIFT</kbd> to rewind</span><span class="only-touch">HOLD THE <b>REWIND</b> BUTTON</span></div>
+      <div class="death-bar"><i id="death-bar-fill"></i></div>
+      <div class="death-sub">Or wait to reconstitute at the last checkpoint</div>
+    </div>
+  </div>
+
+  <!-- ================= TITLE ================= -->
+  <section id="menuScreen" class="screen menu-screen">
+    <header class="menu-topbar">
+      <div class="brandmark">
+        <span class="brand-glyph" aria-hidden="true"><i></i></span>
+        <div><b>CHRONO DIVISION</b><small>TEMPORAL FIELD OPERATIONS</small></div>
+      </div>
+      <div class="topbar-right">
+        <span class="signal"><i></i> TIMELINE STABLE</span>
+        <span class="build">BUILD 5.0.1</span>
+      </div>
+    </header>
+
+    <div class="menu-hero">
+      <div class="menu-copy">
+        <div class="eyebrow"><span class="line"></span> A TEMPORAL ACTION PUZZLE</div>
+        <h1 class="logo" aria-label="Time Rewind">
+          <span class="logo-time">TIME</span>
+          <span class="logo-rewind" data-text="REWIND">REWIND</span>
+        </h1>
+        <p class="tagline">The last five seconds are yours to take back.<br /><em>Bend time. Break the impossible.</em></p>
+        <div class="menu-actions">
+          <button id="btn-play" class="btn btn-primary" data-action="play" aria-label="Play">
+            <span class="btn-index">01</span>
+            <span class="btn-label">PLAY</span>
+            <span class="btn-arrow">↗</span>
+          </button>
+          <button id="btn-levels" class="btn btn-ghost" data-action="levels"><span class="btn-index">02</span><span class="btn-label">SECTORS</span></button>
+          <button id="btn-how" class="btn btn-ghost" data-action="how"><span class="btn-index">03</span><span class="btn-label">PROTOCOL</span></button>
+          <button id="btn-settings" class="btn btn-ghost" data-action="settings"><span class="btn-index">04</span><span class="btn-label">SYSTEM</span></button>
+        </div>
+        <div id="continue-card" class="continue-card is-hidden">
+          <div class="continue-copy">
+            <span class="kicker">RESUME TIMELINE</span>
+            <strong id="continue-name">SECTOR 01 — FIRST ECHO</strong>
+          </div>
+          <button id="btn-continue" class="continue-btn">CONTINUE <span>→</span></button>
+        </div>
+      </div>
+
+      <div class="menu-visual" aria-hidden="true">
+        <div class="time-sigil">
+          <div class="sigil-ring r1"><i></i></div>
+          <div class="sigil-ring r2"><i></i></div>
+          <div class="sigil-ring r3"><i></i></div>
+          <div class="sigil-hand"></div>
+          <div class="sigil-core"><span>5.00</span><small>SECONDS</small></div>
+          <div class="sigil-orbit o1"></div>
+          <div class="sigil-orbit o2"></div>
+        </div>
+        <div class="visual-caption"><span>RECURSION ENGINE</span><b>ONLINE</b></div>
+        <div class="float-stat fs-a"><span>REWIND WINDOW</span><b>−5.00 SEC</b></div>
+        <div class="float-stat fs-b"><span>TIMELINE</span><b>UNSTABLE</b></div>
+      </div>
+    </div>
+
+    <footer class="menu-footer">
+      <div class="footer-note"><span class="pulse-dot"></span> SAVE SYSTEM ACTIVE <span class="sep">//</span> <span id="save-summary">NO TIMELINE RECORDED</span></div>
+      <div class="footer-controls"><span><kbd>A</kbd><kbd>D</kbd> MOVE</span><span><kbd>SPACE</kbd> JUMP</span><span><kbd>R</kbd> REWIND</span></div>
+    </footer>
+  </section>
+
+  <!-- ================= LEVEL SELECT ================= -->
+  <section id="levelScreen" class="screen sub-screen is-hidden">
+    <div class="sub-shell">
+      <header class="sub-header">
+        <button class="back-btn" data-action="menu" aria-label="Back to menu">← <span>RETURN</span></button>
+        <div class="sub-title"><span class="kicker">TEMPORAL ARCHIVE</span><h2>SECTOR SELECT</h2></div>
+        <div class="sub-meta"><span id="sector-progress">1 / 10 UNLOCKED</span><span id="sector-cores">0 CORES</span></div>
+      </header>
+      <div id="level-grid" class="level-grid"></div>
+      <footer class="sub-footer"><span>Complete a sector to unlock the next temporal pathway.</span><span class="footer-hint">ESC — RETURN</span></footer>
+    </div>
+  </section>
+
+  <!-- ================= HOW TO PLAY ================= -->
+  <section id="howScreen" class="screen sub-screen is-hidden">
+    <div class="sub-shell how-shell">
+      <header class="sub-header">
+        <button class="back-btn" data-action="menu" aria-label="Back to menu">← <span>RETURN</span></button>
+        <div class="sub-title"><span class="kicker">FIELD MANUAL</span><h2>PROTOCOL</h2></div>
+        <div class="sub-meta"><span>OPERATIVE HANDBOOK</span><span>REV. 5.0</span></div>
+      </header>
+      <div class="how-grid">
+        <article class="manual-card manual-main">
+          <div class="manual-index">01</div>
+          <h3>THE REWIND</h3>
+          <p>Your suit records every heartbeat. Hold <kbd>R</kbd> or <kbd>SHIFT</kbd> to drag the timeline backwards — up to <strong>five seconds</strong>. Traps, enemies, falling platforms and energy bolts all travel back with you.</p>
+          <div class="rewind-diagram" aria-hidden="true">
+            <span class="diagram-dot d1"></span><span class="diagram-dot d2"></span><span class="diagram-dot d3"></span><span class="diagram-dot d4"></span>
+            <span class="diagram-arrow"></span><span class="diagram-label">PAST</span><span class="diagram-label now">NOW</span>
+          </div>
+          <p class="manual-note">Rewind burns chrono energy. Release to commit the new timeline. Energy cells restore it.</p>
+        </article>
+        <article class="manual-card">
+          <div class="manual-index">02</div>
+          <h3>ECHO PLATFORMS</h3>
+          <p>Some architecture only exists in a temporal afterglow. Perform a rewind and golden echo platforms solidify for four seconds. Cross the impossible gap before the echo fades.</p>
+          <div class="echo-demo" aria-hidden="true"><i></i><i></i><i></i><b>4.0s</b></div>
+        </article>
+        <article class="manual-card">
+          <div class="manual-index">03</div>
+          <h3>HAZARD TELEGRAPHY</h3>
+          <p>Lasers pulse. Saws orbit. Sentinel patrols turn red when they acquire you. Everything is telegraphed — and everything can be undone. Death is a timeline branch, not the end.</p>
+          <div class="hazard-demo" aria-hidden="true"><span class="demo-laser"></span><span class="demo-saw"></span><span class="demo-eye"></span></div>
+        </article>
+        <article class="manual-card">
+          <div class="manual-index">04</div>
+          <h3>CONTROLS</h3>
+          <div class="control-table">
+            <div><span>MOVE</span><b><kbd>A</kbd><kbd>D</kbd> / <kbd>←</kbd><kbd>→</kbd></b></div>
+            <div><span>JUMP</span><b><kbd>SPACE</kbd> / <kbd>W</kbd></b></div>
+            <div><span>REWIND</span><b><kbd>HOLD R</kbd> / <kbd>SHIFT</kbd></b></div>
+            <div><span>PAUSE</span><b><kbd>ESC</kbd></b></div>
+            <div><span>MUTE</span><b><kbd>M</kbd></b></div>
+          </div>
+          <p class="manual-note">Touch operatives receive an adaptive control deck automatically.</p>
+        </article>
+      </div>
+      <div class="manual-tip"><span>TACTICAL NOTE</span> Rewinding rewrites the world, but collected chrono cores and checkpoint progress are stable across timestamps.</div>
+      <footer class="sub-footer"><span>Read the room. Then unread it.</span><span class="footer-hint">ESC — RETURN</span></footer>
+    </div>
+  </section>
+
+  <!-- ================= SETTINGS ================= -->
+  <section id="settingsScreen" class="screen sub-screen is-hidden">
+    <div class="sub-shell settings-shell">
+      <header class="sub-header">
+        <button class="back-btn" data-action="menu" aria-label="Back to menu">← <span>RETURN</span></button>
+        <div class="sub-title"><span class="kicker">OPERATIVE CONFIGURATION</span><h2>SYSTEM</h2></div>
+        <div class="sub-meta"><span>LOCAL SAVE</span><span id="settings-save-state">SYNCED</span></div>
+      </header>
+      <div class="settings-grid">
+        <div class="settings-card">
+          <div class="setting-row">
+            <div><h3>SOUNDSCAPE</h3><p>Reactive synth score and impact audio.</p></div>
+            <button id="toggle-audio" class="toggle" role="switch" aria-checked="true"><i></i><span>ON</span></button>
+          </div>
+          <div class="setting-row">
+            <div><h3>REDUCED MOTION</h3><p>Ease screen shake and ambient distortion.</p></div>
+            <button id="toggle-motion" class="toggle" role="switch" aria-checked="false"><i></i><span>OFF</span></button>
+          </div>
+          <div class="setting-row">
+            <div><h3>SCREEN EFFECTS</h3><p>Scanlines, grain and chromatic accents.</p></div>
+            <button id="toggle-fx" class="toggle" role="switch" aria-checked="true"><i></i><span>ON</span></button>
+          </div>
+        </div>
+        <div class="settings-card save-card">
+          <span class="kicker">TIMELINE ARCHIVE</span>
+          <h3>PROGRESS SAVE</h3>
+          <p>Your unlocked sectors, chrono cores and best times are stored on this device.</p>
+          <div class="save-stats"><div><b id="save-unlocked">1</b><span>SECTORS</span></div><div><b id="save-cores">0</b><span>CORES</span></div><div><b id="save-runs">0</b><span>CLEARS</span></div></div>
+          <button id="btn-reset" class="btn btn-danger">PURGE TIMELINE</button>
+          <small>This cannot be undone.</small>
+        </div>
+      </div>
+      <footer class="sub-footer"><span>All systems local. No transmission required.</span><span class="footer-hint">ESC — RETURN</span></footer>
+    </div>
+  </section>
+
+  <!-- ================= PAUSE ================= -->
+  <section id="pauseScreen" class="screen overlay-screen is-hidden">
+    <div class="overlay-panel pause-panel">
+      <div class="panel-kicker"><span></span> TEMPORAL HOLD</div>
+      <h2>PAUSED</h2>
+      <p class="panel-sub">The timeline waits for no one. Except you.</p>
+      <div class="pause-stats">
+        <div><span>SECTOR</span><b id="pause-sector">01</b></div>
+        <div><span>TIME</span><b id="pause-time">00:00</b></div>
+        <div><span>CORES</span><b id="pause-cores">0/3</b></div>
+      </div>
+      <div class="panel-actions">
+        <button id="btn-resume" class="btn btn-primary"><span class="btn-index">01</span><span class="btn-label">RESUME</span><span class="btn-arrow">→</span></button>
+        <button id="btn-restart" class="btn btn-ghost"><span class="btn-index">02</span><span class="btn-label">RESTART SECTOR</span></button>
+        <button id="btn-pause-levels" class="btn btn-ghost"><span class="btn-index">03</span><span class="btn-label">SECTOR SELECT</span></button>
+      </div>
+      <div class="panel-hint"><kbd>ESC</kbd> TO RESUME <span>//</span> <kbd>M</kbd> TO MUTE</div>
+    </div>
+  </section>
+
+  <!-- ================= COMPLETE ================= -->
+  <section id="completeScreen" class="screen overlay-screen is-hidden">
+    <div class="overlay-panel complete-panel">
+      <div class="clear-emblem" aria-hidden="true"><span></span><i></i></div>
+      <div class="panel-kicker"><span></span> <span id="complete-kicker">TEMPORAL PATHWAY SECURED</span></div>
+      <h2 id="complete-title">SECTOR CLEAR</h2>
+      <p id="complete-name" class="panel-sub">FIRST ECHO</p>
+      <div class="result-stars" id="result-stars"><i></i><i></i><i></i></div>
+      <div class="result-grid">
+        <div><span>CLEAR TIME</span><b id="result-time">00:00.00</b><small id="result-best">NEW RECORD</small></div>
+        <div><span>DEATHS</span><b id="result-deaths">0</b><small>TIMELINE SPLITS</small></div>
+        <div><span>CORES</span><b id="result-cores">0/3</b><small>CHRONO FRAGMENTS</small></div>
+      </div>
+      <div class="panel-actions horizontal">
+        <button id="btn-next" class="btn btn-primary"><span class="btn-label">NEXT SECTOR</span><span class="btn-arrow">→</span></button>
+        <button id="btn-replay" class="btn btn-ghost"><span class="btn-label">REPLAY</span></button>
+        <button id="btn-complete-levels" class="btn btn-ghost"><span class="btn-label">SECTORS</span></button>
+      </div>
+      <div id="campaign-complete" class="campaign-complete is-hidden">
+        <span>ALL TEN SECTORS RESTORED</span>
+        <p>The fracture is closed. The timeline remembers you.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= LEVEL INTRO ================= -->
+  <div id="levelIntro" class="level-intro is-hidden" aria-hidden="true">
+    <div class="intro-line"><span></span></div>
+    <div class="intro-kicker" id="intro-kicker">SECTOR 01 // TEMPORAL ENTRY</div>
+    <h2 id="intro-name">FIRST ECHO</h2>
+    <p id="intro-sub">Reach the exit gate.</p>
+  </div>
+
+  <!-- ================= TOAST ================= -->
+  <div id="toast" class="toast is-hidden"><span id="toast-kicker">SYSTEM</span><p id="toast-text"></p></div>
+
+  <!-- ================= TOUCH CONTROLS ================= -->
+  <div id="touchControls" class="touch-controls" aria-label="Touch controls">
+    <div class="touch-cluster touch-move">
+      <button class="touch-btn" data-touch="left" aria-label="Move left"><span>◀</span></button>
+      <button class="touch-btn" data-touch="right" aria-label="Move right"><span>▶</span></button>
+    </div>
+    <div class="touch-cluster touch-action">
+      <button class="touch-btn touch-rewind" data-touch="rewind" aria-label="Hold to rewind"><span class="touch-ring"></span><span>REWIND</span></button>
+      <button class="touch-btn touch-jump" data-touch="jump" aria-label="Jump"><span>JUMP</span><i>↑</i></button>
+    </div>
+  </div>
+
+  <!-- ================= ROTATE HINT ================= -->
+  <div id="rotateHint" class="rotate-hint is-hidden"><span>↻</span> LANDSCAPE RECOMMENDED</div>
+
+  <noscript><div class="noscript">TIME REWIND requires JavaScript to bend the timeline.</div></noscript>
+</div>
+<script type="module" src="js/main.js"></script>
+</body>
+</html>
