@@ -1,0 +1,216 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+  <meta name="theme-color" content="#05030d" />
+  <meta name="description" content="SHADOW STRIKE: CYBER RONIN — a neon-soul action platformer." />
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' fill='%2305030d'/%3E%3Cpath d='M32 8l18 24-18 24L14 32z' fill='none' stroke='%235df7ff' stroke-width='3'/%3E%3Cpath d='M32 20v24' stroke='%23ff3fce' stroke-width='2'/%3E%3C/svg%3E" />
+  <title>SHADOW STRIKE · CYBER RONIN</title>
+  <link rel="stylesheet" href="./style.css" />
+</head>
+<body>
+  <div id="app">
+    <div id="stage">
+      <div id="game-wrap">
+        <canvas id="game" aria-label="Shadow Strike game canvas"></canvas>
+        <div id="grain" aria-hidden="true"></div>
+        <div id="vignette" aria-hidden="true"></div>
+        <div id="damage-flash" aria-hidden="true"></div>
+
+        <div id="hud" aria-hidden="true">
+          <div class="hud-left">
+            <div class="hud-name"><span class="mark">零</span> RONIN-07</div>
+            <div class="bar-row">
+              <div class="bar-label">HP</div>
+              <div class="bar health"><div id="health-fill" class="fill"></div><div class="bar-ticks"></div></div>
+              <div id="health-text" class="bar-value">100</div>
+            </div>
+            <div class="bar-row">
+              <div class="bar-label">EN</div>
+              <div class="bar energy"><div id="energy-fill" class="fill"></div><div class="bar-ticks"></div></div>
+              <div id="energy-text" class="bar-value">100</div>
+            </div>
+            <div class="dash-pips" id="dash-pips"><i></i><i></i></div>
+          </div>
+
+          <div class="hud-right">
+            <div class="score-block">
+              <div class="hud-caption">SCORE</div>
+              <div id="score" class="score">000000</div>
+            </div>
+            <div class="orb-block"><span class="orb-icon"></span><span id="orb-count">0</span></div>
+            <div id="combo" class="combo hidden"><span id="combo-num">2</span><em>CHAIN</em></div>
+          </div>
+
+          <div id="boss-hud" class="boss-hud hidden">
+            <div class="boss-meta"><span class="boss-tag">TARGET // OVERLORD</span><span id="boss-name">ZERO</span><span id="boss-phase" class="boss-phase">PHASE I</span></div>
+            <div class="boss-bar"><div id="boss-fill"></div><div class="boss-bar-marks"></div></div>
+          </div>
+
+          <div id="toast" class="toast"></div>
+          <div id="hint" class="hint"></div>
+          <div id="sector-card" class="sector-card">
+            <div class="sector-kicker">SECTOR</div>
+            <div id="sector-title">01 · NEON DISTRICT</div>
+            <div id="sector-sub" class="sector-sub">INFILTRATE THE SPIRE</div>
+          </div>
+
+          <div class="hud-buttons">
+            <button id="btn-sound" class="icon-btn" title="Toggle sound" aria-label="Toggle sound">♪</button>
+            <button id="btn-pause" class="icon-btn" title="Pause" aria-label="Pause">II</button>
+          </div>
+          <div class="hud-zone"><span class="live-dot"></span> NEO-KYOTO // 03:17 AM</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- MAIN MENU -->
+    <section id="menu" class="screen active">
+      <div class="menu-bg" aria-hidden="true"></div>
+      <div class="menu-shell">
+        <div class="eyebrow"><span class="rule"></span> NEON-SOUL ACTION PLATFORMER <span class="rule"></span></div>
+        <h1 class="logo">
+          <span class="logo-shadow">SHADOW STRIKE</span>
+          <span class="logo-main" data-text="SHADOW STRIKE">SHADOW STRIKE</span>
+          <span class="logo-sub"><i></i> CYBER RONIN <i></i></span>
+        </h1>
+        <p class="tagline">The city took everything. <strong>Take it back, one blade at a time.</strong></p>
+
+        <div class="menu-actions">
+          <button id="btn-start" class="btn btn-primary" autofocus>
+            <span class="btn-glyph">▶</span><span>BEGIN THE HUNT</span><em>ENTER</em>
+          </button>
+          <button id="btn-help" class="btn btn-ghost">HOW TO PLAY</button>
+          <button id="btn-sound-menu" class="btn btn-ghost">SOUND: ON</button>
+        </div>
+
+        <div class="menu-footer">
+          <div class="key-hints">
+            <span><kbd>A</kbd><kbd>D</kbd> MOVE</span>
+            <span><kbd>SPACE</kbd> JUMP / DOUBLE JUMP</span>
+            <span><kbd>J</kbd> STRIKE</span>
+            <span><kbd>SHIFT</kbd> DASH</span>
+          </div>
+          <div class="build">BUILD 07.31 // SHADOW PROTOCOL</div>
+        </div>
+      </div>
+      <div class="scan-corners" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
+    </section>
+
+    <!-- HOW TO PLAY -->
+    <section id="help" class="screen">
+      <div class="panel wide">
+        <button class="close-btn" data-close="help" aria-label="Close">×</button>
+        <div class="panel-kicker">FIELD MANUAL // RONIN-07</div>
+        <h2>THE BLADE REMEMBERS</h2>
+        <div class="help-grid">
+          <div class="help-card">
+            <div class="help-icon">影</div>
+            <h3>MOVE LIKE SMOKE</h3>
+            <p><kbd>A</kbd> <kbd>D</kbd> or <kbd>←</kbd> <kbd>→</kbd> to run. <kbd>SPACE</kbd> / <kbd>W</kbd> jumps — press again in the air to double jump. Hold for height.</p>
+          </div>
+          <div class="help-card">
+            <div class="help-icon">斬</div>
+            <h3>CUT LIKE LIGHTNING</h3>
+            <p><kbd>J</kbd> / <kbd>Z</kbd> / click performs a three-hit katana chain. Time your presses to keep the chain alive. Air strikes spin.</p>
+          </div>
+          <div class="help-card">
+            <div class="help-icon">迅</div>
+            <h3>DASH THROUGH DEATH</h3>
+            <p><kbd>SHIFT</kbd> / <kbd>K</kbd> dashes. You are invulnerable mid-dash. Dash + strike for a piercing launcher. Dash costs energy.</p>
+          </div>
+          <div class="help-card">
+            <div class="help-icon">魂</div>
+            <h3>HARVEST THE CITY</h3>
+            <p>Collect energy orbs to restore power and raise your score. Chain kills for a multiplier. Checkpoints restore you — and the dead stay dead.</p>
+          </div>
+        </div>
+        <div class="help-tip"><strong>TACTICAL:</strong> Striking an enemy bolt destroys it and refunds energy. Use dash invulnerability against boss beams.</div>
+        <button class="btn btn-primary" data-close="help">RETURN</button>
+      </div>
+    </section>
+
+    <!-- PAUSE -->
+    <section id="pause" class="screen">
+      <div class="panel narrow">
+        <div class="panel-kicker">SYSTEM // PAUSED</div>
+        <h2>HOLD THE LINE</h2>
+        <div class="pause-stats">
+          <div><span>SCORE</span><b id="pause-score">0</b></div>
+          <div><span>SECTOR</span><b id="pause-sector">01</b></div>
+          <div><span>ORBS</span><b id="pause-orbs">0</b></div>
+        </div>
+        <div class="stack">
+          <button id="btn-resume" class="btn btn-primary">RESUME <em>ESC</em></button>
+          <button id="btn-restart" class="btn btn-ghost">RESTART CHECKPOINT</button>
+          <button id="btn-pause-sound" class="btn btn-ghost">SOUND: ON</button>
+          <button id="btn-quit" class="btn btn-danger">ABANDON HUNT</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- GAME OVER -->
+    <section id="gameover" class="screen">
+      <div class="panel narrow outcome">
+        <div class="outcome-mark">断</div>
+        <div class="panel-kicker danger">SIGNAL LOST // FLATLINE</div>
+        <h2>THE CITY WINS</h2>
+        <p class="outcome-copy">Your blade falls silent in the rain. The spire still burns.</p>
+        <div class="outcome-stats">
+          <div><span>SCORE</span><b id="over-score">0</b></div>
+          <div><span>ORBS</span><b id="over-orbs">0</b></div>
+          <div><span>BEST CHAIN</span><b id="over-combo">0</b></div>
+        </div>
+        <div class="stack">
+          <button id="btn-retry" class="btn btn-primary">RISE AGAIN <em>R</em></button>
+          <button id="btn-over-menu" class="btn btn-ghost">MAIN MENU</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- VICTORY -->
+    <section id="victory" class="screen">
+      <div class="panel narrow outcome victory">
+        <div class="outcome-mark">勝</div>
+        <div class="panel-kicker">SPIRE PURGED // SIGNAL CLEAR</div>
+        <h2>DAWN BREAKS</h2>
+        <p class="outcome-copy">Overlord Zero is scrap. For the first time in years, the neon looks like sunrise.</p>
+        <div class="outcome-stats">
+          <div><span>FINAL SCORE</span><b id="win-score">0</b></div>
+          <div><span>TIME</span><b id="win-time">0:00</b></div>
+          <div><span>BEST CHAIN</span><b id="win-combo">0</b></div>
+        </div>
+        <div class="stack">
+          <button id="btn-again" class="btn btn-primary">HUNT AGAIN <em>ENTER</em></button>
+          <button id="btn-win-menu" class="btn btn-ghost">MAIN MENU</button>
+        </div>
+      </div>
+    </section>
+
+    <div id="rotate" class="rotate-msg">
+      <div class="rotate-phone"></div>
+      <strong>ROTATE YOUR DEVICE</strong>
+      <span>Shadow Strike is best played in landscape.</span>
+    </div>
+
+    <!-- TOUCH CONTROLS -->
+    <div id="touch-controls" aria-hidden="true">
+      <div id="stick" class="stick"><div class="stick-ring"></div><div id="stick-knob" class="stick-knob"></div><span>MOVE</span></div>
+      <div class="touch-actions">
+        <button id="touch-dash" class="touch-btn dash" aria-label="Dash"><span>DASH</span></button>
+        <button id="touch-attack" class="touch-btn attack" aria-label="Attack"><span>斬</span></button>
+        <button id="touch-jump" class="touch-btn jump" aria-label="Jump"><span>JUMP</span></button>
+      </div>
+    </div>
+
+    <div id="loading" class="loading">
+      <div class="load-mark">影</div>
+      <div class="load-bar"><i></i></div>
+      <div class="load-text">SYNCING NEURAL LINK</div>
+    </div>
+  </div>
+
+  <script type="module" src="./src/main.js"></script>
+</body>
+</html>
