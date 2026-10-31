@@ -1,0 +1,689 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#0b1026">
+<title>FLAPPY BALL – Arcade Challenge</title>
+<style>
+  :root { color-scheme: dark; }
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+  html, body { width: 100%; height: 100%; overflow: hidden; background: #0b1026; font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; }
+  body { display: flex; align-items: center; justify-content: center; }
+  #game { display: block; touch-action: none; cursor: pointer; }
+  #hud {
+    position: fixed; top: 12px; left: 12px; right: 12px;
+    display: flex; justify-content: space-between; align-items: flex-start;
+    pointer-events: none; z-index: 5; color: #fff; text-shadow: 0 2px 6px rgba(0,0,0,.5);
+    font-weight: 700;
+  }
+  .scorebox { font-size: clamp(20px, 5vw, 34px); letter-spacing: 1px; }
+  .bestbox { font-size: clamp(12px, 3vw, 16px); opacity: .85; }
+  #pauseBtn {
+    pointer-events: auto; position: fixed; top: 12px; right: 12px;
+    width: 40px; height: 40px; border-radius: 50%;
+    background: rgba(255,255,255,.15); border: 1px solid rgba(255,255,255,.3);
+    color: #fff; font-size: 18px; cursor: pointer; z-index: 6;
+    display: flex; align-items: center; justify-content: center;
+  }
+  #overlay {
+    position: fixed; inset: 0; display: flex; flex-direction: column;
+    align-items: center; justify-content: center; z-index: 10;
+    background: rgba(5,8,25,.55); backdrop-filter: blur(2px);
+    text-align: center; color: #fff; padding: 20px;
+  }
+  #overlay.hidden { display: none; }
+  #overlay h1 { font-size: clamp(34px, 9vw, 72px); letter-spacing: 2px; margin-bottom: 6px;
+    background: linear-gradient(135deg, #ffd166, #ff6b9d, #7c5cff); -webkit-background-clip: text; background-clip: text; color: transparent; }
+  #overlay h2 { font-size: clamp(18px, 4vw, 28px); opacity: .9; margin-bottom: 18px; }
+  #overlay p { font-size: clamp(13px, 3vw, 18px); opacity: .8; max-width: 420px; line-height: 1.5; }
+  #overlay .btn {
+    margin-top: 22px; padding: 14px 34px; font-size: clamp(16px, 4vw, 22px); font-weight: 700;
+    border: none; border-radius: 999px; cursor: pointer;
+    background: linear-gradient(135deg, #7c5cff, #ff6b9d); color: #fff;
+    box-shadow: 0 8px 24px rgba(124,92,255,.45); transition: transform .12s;
+  }
+  #overlay .btn:active { transform: scale(.96); }
+  .stat { margin-top: 8px; font-size: clamp(14px, 3.5vw, 20px); }
+  .stat b { color: #ffd166; }
+</style>
+</head>
+<body>
+<canvas id="game"></canvas>
+<button id="pauseBtn" aria-label="Pause">❚❚</button>
+<div id="hud">
+  <div>
+    <div class="scorebox" id="scoreEl">0</div>
+    <div class="bestbox" id="bestEl">BEST 0</div>
+  </div>
+</div>
+<div id="overlay">
+  <h1>FLAPPY BALL</h1>
+  <h2 id="overlaySub">Arcade Challenge</h2>
+  <p id="overlayMsg">Tap, click or press Space to make the ball bounce. Avoid the pipes, collect stars, and beat your best score.</p>
+  <div id="overlayStats"></div>
+  <button class="btn" id="overlayBtn">PLAY</button>
+</div>
+<script>
+(() => {
+  'use strict';
+
+  const canvas = document.getElementById('game');
+  const ctx = canvas.getContext('2d');
+  const overlay = document.getElementById('overlay');
+  const overlaySub = document.getElementById('overlaySub');
+  const overlayMsg = document.getElementById('overlayMsg');
+  const overlayStats = document.getElementById('overlayStats');
+  const overlayBtn = document.getElementById('overlayBtn');
+  const scoreEl = document.getElementById('scoreEl');
+  const bestEl = document.getElementById('bestEl');
+  const pauseBtn = document.getElementById('pauseBtn');
+
+  // ---------- Audio ----------
+  let audioCtx = null;
+  function ensureAudio() {
+    if (!audioCtx) {
+      try { audioCtx = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) { audioCtx = null; }
+    }
+    if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
+  }
+  function beep(freq, dur, type='sine', gain=.12, slide=0) {
+    if (!audioCtx) return;
+    try {
+      const t = audioCtx.currentTime;
+      const o = audioCtx.createOscillator();
+      const g = audioCtx.createGain();
+      o.type = type;
+      o.frequency.setValueAtTime(freq, t);
+      if (slide) o.frequency.exponentialRampToValueAtTime(Math.max(40, freq+slide), t+dur);
+      g.gain.setValueAtTime(gain, t);
+      g.gain.exponentialRampToValueAtTime(0.0001, t+dur);
+      o.connect(g); g.connect(audioCtx.destination);
+      o.start(t); o.stop(t+dur);
+    } catch (e) {}
+  }
+  const sfxFlap = () => beep(520, .08, 'triangle', .1);
+  const sfxScore = () => { beep(660, .06, 'square', .1); setTimeout(()=>beep(880,.08,'square',.1),60); };
+  const sfxStar = () => { beep(784,.06,'sine',.12); setTimeout(()=>beep(988,.06,'sine',.12),70); setTimeout(()=>beep(1318,.1,'sine',.12),140); };
+  const sfxBounce = () => beep(220,.12,'triangle',.12,-80);
+  const sfxDie = () => { beep(300,.15,'sawtooth',.15,-220); setTimeout(()=>beep(180,.2,'sawtooth',.12,-100),120); };
+  const sfxPause = () => beep(440,.06,'sine',.08);
+
+  // ---------- State ----------
+  let W = 0, H = 0, DPR = 1;
+  let state = 'start';
+  let score = 0;
+  let best = 0;
+  try { best = parseInt(localStorage.getItem('flappyBallBest') || '0', 10) || 0; } catch (e) {}
+  bestEl.textContent = 'BEST ' + best;
+
+  const FLAP_V = -7.8;
+  const MAX_FALL = 13;
+  let unit = 1;
+  let ball = { x:0, y:0, vy:0, r:0, rot:0, squash:1, squashV:0 };
+  let obstacles = [];
+  let stars = [];
+  let particles = [];
+  let clouds = [];
+  let groundY = 0;
+  let speed = 0;
+  let gapSize = 0;
+  let spawnInterval = 1.35;
+  let spawnTimerSec = 0;
+  let lastTime = 0;
+  let rafId = 0;
+  let flashAlpha = 0;
+  let shake = 0;
+  let newBest = false;
+
+  const THEMES = [
+    { skyTop:'#4fa8ff', skyBot:'#b9e3ff', ground:'#3fa34d', groundTop:'#7bc96f', pipe:'#2e8b57', pipeHi:'#5fc98a', star:'#ffd166', cloud:'rgba(255,255,255,.7)' },
+    { skyTop:'#ff8a5b', skyBot:'#ffd1a8', ground:'#8a5a3b', groundTop:'#c98a5b', pipe:'#a04a2a', pipeHi:'#d97a4a', star:'#ffe066', cloud:'rgba(255,240,220,.7)' },
+    { skyTop:'#0b1026', skyBot:'#2a2f55', ground:'#1a1f3a', groundTop:'#2e3460', pipe:'#3a3f7a', pipeHi:'#6a70b0', star:'#ffeaa7', cloud:'rgba(180,190,255,.25)' },
+    { skyTop:'#1a0b2e', skyBot:'#3d1a5c', ground:'#2a1040', groundTop:'#4a1f6e', pipe:'#7c3aed', pipeHi:'#a78bfa', star:'#fbbf24', cloud:'rgba(255,180,255,.2)' },
+  ];
+  let curThemeIdx = 0, tgtThemeIdx = 0, themeProgressVal = 1;
+
+  function lerpColor(a, b, t) {
+    const pa = parseInt(a.slice(1),16), pb = parseInt(b.slice(1),16);
+    const ra=(pa>>16)&255, ga=(pa>>8)&255, ba=pa&255;
+    const rb=(pb>>16)&255, gb=(pb>>8)&255, bb=pb&255;
+    const r=Math.round(ra+(rb-ra)*t), g=Math.round(ga+(gb-ga)*t), b2=Math.round(ba+(bb-ba)*t);
+    return `rgb(${r},${g},${b2})`;
+  }
+  function theme() {
+    const a = THEMES[curThemeIdx], b = THEMES[tgtThemeIdx];
+    if (curThemeIdx === tgtThemeIdx) return a;
+    const p = themeProgressVal;
+    const out = {};
+    for (const k of Object.keys(a)) {
+      if (k === 'cloud') { out[k] = p < 0.5 ? a.cloud : b.cloud; continue; }
+      out[k] = lerpColor(a[k], b[k], p);
+    }
+    return out;
+  }
+
+  // ---------- Resize ----------
+  function resize() {
+    DPR = Math.min(window.devicePixelRatio || 1, 2);
+    W = window.innerWidth;
+    H = window.innerHeight;
+    canvas.width = Math.floor(W * DPR);
+    canvas.height = Math.floor(H * DPR);
+    canvas.style.width = W + 'px';
+    canvas.style.height = H + 'px';
+    ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+    unit = H / 600;
+    if (unit < 0.5) unit = 0.5;
+    if (unit > 2.2) unit = 2.2;
+    groundY = H - 70*unit;
+    ball.r = 18*unit;
+    if (state !== 'playing') {
+      ball.x = W * 0.22;
+      ball.y = H * 0.45;
+      ball.vy = 0;
+    }
+    clouds = [];
+    for (let i = 0; i < 6; i++) clouds.push(makeCloud(true));
+  }
+  window.addEventListener('resize', resize);
+  resize();
+
+  function makeCloud(initial) {
+    return {
+      x: initial ? Math.random()*W : W + 60*unit,
+      y: 40*unit + Math.random()*(H*0.35),
+      s: 0.6 + Math.random()*1.2,
+      speed: (0.15 + Math.random()*0.25)*unit
+    };
+  }
+
+  // ---------- Particles ----------
+  function spawnParticles(x, y, count, color, opts={}) {
+    for (let i = 0; i < count; i++) {
+      const ang = Math.random()*Math.PI*2;
+      const sp = (opts.speed || 3)*unit * (0.4 + Math.random()*0.8);
+      particles.push({
+        x, y,
+        vx: Math.cos(ang)*sp + (opts.vx||0),
+        vy: Math.sin(ang)*sp + (opts.vy||0),
+        life: 0,
+        maxLife: (opts.life || 40) + Math.random()*20,
+        color,
+        size: (opts.size || 3)*unit * (0.6 + Math.random()*0.8),
+        grav: opts.grav !== undefined ? opts.grav : 0.15,
+        fade: opts.fade !== false
+      });
+    }
+    if (particles.length > 400) particles.splice(0, particles.length-400);
+  }
+  function updateParticles(dt) {
+    for (let i = particles.length-1; i >= 0; i--) {
+      const p = particles[i];
+      p.life += dt;
+      if (p.life >= p.maxLife) { particles.splice(i,1); continue; }
+      p.vy += p.grav * dt * 0.5;
+      p.x += p.vx * dt;
+      p.y += p.vy * dt;
+      p.vx *= 0.985;
+    }
+  }
+  function drawParticles() {
+    for (const p of particles) {
+      const a = 1 - p.life/p.maxLife;
+      ctx.globalAlpha = p.fade ? a : 1;
+      ctx.fillStyle = p.color;
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, Math.max(0.5, p.size*(0.6+a*0.4)), 0, Math.PI*2);
+      ctx.fill();
+    }
+    ctx.globalAlpha = 1;
+  }
+
+  // ---------- Game logic ----------
+  function resetGame() {
+    score = 0;
+    scoreEl.textContent = '0';
+    obstacles = [];
+    stars = [];
+    particles = [];
+    ball.x = W * 0.22;
+    ball.y = H * 0.45;
+    ball.vy = 0;
+    ball.rot = 0;
+    ball.squash = 1;
+    ball.squashV = 0;
+    speed = 2.8*unit;
+    gapSize = 170*unit;
+    spawnInterval = 1.35;
+    spawnTimerSec = 0.5;
+    curThemeIdx = 0;
+    tgtThemeIdx = 0;
+    themeProgressVal = 1;
+    flashAlpha = 0;
+    shake = 0;
+    newBest = false;
+    let x = W + 120*unit;
+    for (let i = 0; i < 3; i++) {
+      spawnObstacle(x);
+      x += 260*unit;
+    }
+  }
+
+  function spawnObstacle(x) {
+    const minGapY = 80*unit + gapSize/2;
+    const maxGapY = groundY - 80*unit - gapSize/2;
+    const gapY = minGapY + Math.random()*(maxGapY-minGapY);
+    const hasStar = Math.random() < 0.55;
+    obstacles.push({ x, gapY, gapH: gapSize, w: 58*unit, scored: false });
+    if (hasStar) {
+      stars.push({ x: x + 29*unit, y: gapY, r: 11*unit, collected: false, pulse: Math.random()*Math.PI*2 });
+    }
+  }
+
+  function flap() {
+    if (state === 'start') { startGame(); return; }
+    if (state === 'over') { restart(); return; }
+    if (state === 'paused') { resume(); return; }
+    if (state !== 'playing') return;
+    ball.vy = FLAP_V * Math.sqrt(unit);
+    ball.squash = 0.7;
+    ball.squashV = 0.3;
+    sfxFlap();
+    spawnParticles(ball.x - ball.r*0.6, ball.y + ball.r*0.3, 6, 'rgba(255,255,255,.8)', { speed:2.2, life:18, size:2.5, grav:0.05 });
+  }
+
+  function startGame() {
+    ensureAudio();
+    resetGame();
+    state = 'playing';
+    overlay.classList.add('hidden');
+  }
+  function restart() {
+    ensureAudio();
+    resetGame();
+    state = 'playing';
+    overlay.classList.add('hidden');
+  }
+  function pause() {
+    if (state !== 'playing') return;
+    state = 'paused';
+    sfxPause();
+    showPauseOverlay();
+  }
+  function resume() {
+    if (state !== 'paused') return;
+    state = 'playing';
+    overlay.classList.add('hidden');
+    lastTime = performance.now();
+  }
+  function gameOver() {
+    state = 'over';
+    sfxDie();
+    shake = 18;
+    spawnParticles(ball.x, ball.y, 36, '#ff6b9d', { speed:5, life:50, size:4, grav:0.2 });
+    spawnParticles(ball.x, ball.y, 18, '#ffd166', { speed:3.5, life:40, size:3, grav:0.15 });
+    newBest = score > best;
+    if (newBest) { best = score; try { localStorage.setItem('flappyBallBest', String(best)); } catch(e){} }
+    bestEl.textContent = 'BEST ' + best;
+    flashAlpha = 0.6;
+    showGameOverOverlay();
+  }
+
+  function showPauseOverlay() {
+    overlaySub.textContent = 'Paused';
+    overlayMsg.textContent = 'Tap resume or press P / Esc to continue.';
+    overlayStats.innerHTML = `<div class="stat">SCORE <b>${score}</b></div>`;
+    overlayBtn.textContent = 'RESUME';
+    overlay.classList.remove('hidden');
+  }
+  function showGameOverOverlay() {
+    overlaySub.textContent = newBest ? 'NEW BEST!' : 'Game Over';
+    overlayMsg.textContent = 'Tap, click or press Space to play again.';
+    overlayStats.innerHTML = `<div class="stat">SCORE <b>${score}</b></div><div class="stat">BEST <b>${best}</b></div>`;
+    overlayBtn.textContent = 'RETRY';
+    overlay.classList.remove('hidden');
+  }
+  function showStartOverlay() {
+    state = 'start';
+    overlaySub.textContent = 'Arcade Challenge';
+    overlayMsg.textContent = 'Tap, click or press Space to make the ball bounce. Avoid the pipes, collect stars, and beat your best score.';
+    overlayStats.innerHTML = '';
+    overlayBtn.textContent = 'PLAY';
+    overlay.classList.remove('hidden');
+  }
+
+  // ---------- Update ----------
+  function updateGame(dtSec) {
+    if (state !== 'playing') return;
+    const dt = dtSec * 60;
+    if (dt > 3) return;
+
+    const targetSpeed = (2.8 + Math.min(score*0.04, 3.0))*unit;
+    speed += (targetSpeed - speed)*0.05*dt;
+    const targetGap = Math.max(110*unit, 170*unit - score*1.0*unit);
+    gapSize += (targetGap - gapSize)*0.02*dt;
+    spawnInterval = Math.max(0.85, 1.35 - score*0.012);
+
+    const ti = Math.floor(score / 10) % THEMES.length;
+    if (ti !== tgtThemeIdx) {
+      curThemeIdx = tgtThemeIdx;
+      tgtThemeIdx = ti;
+      themeProgressVal = 0;
+    }
+    if (themeProgressVal < 1) {
+      themeProgressVal = Math.min(1, themeProgressVal + dtSec*1.5);
+      if (themeProgressVal >= 1) curThemeIdx = tgtThemeIdx;
+    }
+
+    ball.vy += 0.45 * dt;
+    const maxFall = MAX_FALL*Math.sqrt(unit);
+    if (ball.vy > maxFall) ball.vy = maxFall;
+    ball.y += ball.vy * dt;
+    ball.rot = Math.min(1.2, Math.max(-1.2, ball.vy * 0.08));
+    ball.squash += ball.squashV * dt;
+    ball.squashV += (1 - ball.squash)*0.25 * dt;
+    ball.squashV *= Math.pow(0.88, dt);
+    if (ball.squash < 0.6) ball.squash = 0.6;
+    if (ball.squash > 1.35) ball.squash = 1.35;
+
+    const sy = ball.squash;
+    if (ball.y + ball.r*sy > groundY) {
+      ball.y = groundY - ball.r*sy;
+      if (ball.vy > 0) {
+        ball.vy = -Math.abs(ball.vy)*0.5 - 2.0*Math.sqrt(unit);
+        ball.squash = 0.6;
+        ball.squashV = 0.4;
+        sfxBounce();
+        spawnParticles(ball.x, groundY, 8, 'rgba(255,255,255,.6)', { speed:2, life:20, size:2, grav:0.05, vy:-1 });
+        shake = Math.max(shake, 4);
+      }
+    }
+    if (ball.y - ball.r*sy < 0) {
+      ball.y = ball.r*sy;
+      gameOver();
+      return;
+    }
+
+    for (const o of obstacles) o.x -= speed * dt;
+    for (const s of stars) s.x -= speed * dt;
+
+    for (const o of obstacles) {
+      if (!o.scored && o.x + o.w/2 < ball.x) {
+        o.scored = true;
+        score++;
+        scoreEl.textContent = score;
+        sfxScore();
+        spawnParticles(ball.x, ball.y, 8, '#7c5cff', { speed:2.5, life:22, size:2.5, grav:0.08 });
+      }
+    }
+
+    spawnTimerSec -= dtSec;
+    if (spawnTimerSec <= 0) {
+      const lastX = obstacles.length ? obstacles[obstacles.length-1].x : W;
+      const spacing = (230 + Math.random()*60)*unit;
+      spawnObstacle(Math.max(W + 40*unit, lastX + spacing));
+      spawnTimerSec = spawnInterval;
+    }
+
+    obstacles = obstacles.filter(o => o.x + o.w > -60*unit);
+    stars = stars.filter(s => s.x > -60*unit);
+
+    for (const s of stars) {
+      if (s.collected) continue;
+      const dx = s.x - ball.x, dy = s.y - ball.y;
+      if (Math.hypot(dx,dy) < ball.r + s.r) {
+        s.collected = true;
+        score += 3;
+        scoreEl.textContent = score;
+        sfxStar();
+        spawnParticles(s.x, s.y, 20, '#ffd166', { speed:4, life:40, size:3, grav:0.1 });
+        spawnParticles(s.x, s.y, 10, '#fff', { speed:2.5, life:25, size:2, grav:0.05 });
+        flashAlpha = Math.max(flashAlpha, 0.25);
+      }
+    }
+
+    // collisions
+    for (const o of obstacles) {
+      const left = o.x - o.w/2;
+      const topPipeBottom = o.gapY - o.gapH/2;
+      const botPipeTop = o.gapY + o.gapH/2;
+      if (circleRectCollide(ball.x, ball.y, ball.r*0.75, left, 0, o.w, topPipeBottom)) { gameOver(); return; }
+      if (circleRectCollide(ball.x, ball.y, ball.r*0.75, left, botPipeTop, o.w, groundY-botPipeTop)) { gameOver(); return; }
+    }
+
+    updateParticles(dt);
+    for (const s of stars) s.pulse = (s.pulse||0) + 0.12*dt;
+  }
+
+  function circleRectCollide(cx,cy,cr, rx,ry,rw,rh) {
+    const closestX = Math.max(rx, Math.min(cx, rx+rw));
+    const closestY = Math.max(ry, Math.min(cy, ry+rh));
+    const dx = cx - closestX, dy = cy - closestY;
+    return dx*dx + dy*dy < cr*cr;
+  }
+
+  // ---------- Render ----------
+  function draw() {
+    ctx.save();
+    if (shake > 0) {
+      const sx = (Math.random()-0.5)*shake;
+      const sy = (Math.random()-0.5)*shake;
+      ctx.translate(sx, sy);
+      shake *= 0.9;
+      if (shake < 0.1) shake = 0;
+    }
+
+    const th = theme();
+    const grad = ctx.createLinearGradient(0,0,0,H);
+    grad.addColorStop(0, th.skyTop);
+    grad.addColorStop(1, th.skyBot);
+    ctx.fillStyle = grad;
+    ctx.fillRect(-10, -10, W+20, H+20);
+
+    for (const c of clouds) {
+      c.x -= c.speed * (state==='playing' ? speed*0.3 : 0.5);
+      if (c.x < -120*unit) { Object.assign(c, makeCloud(false)); c.x = W + 60*unit; }
+      drawCloud(c, th.cloud);
+    }
+
+    ctx.fillStyle = th.ground;
+    ctx.fillRect(0, groundY, W, H-groundY);
+    ctx.fillStyle = th.groundTop;
+    ctx.fillRect(0, groundY, W, 8*unit);
+    ctx.fillStyle = th.groundTop;
+    for (let x = 0; x < W; x += 18*unit) {
+      ctx.beginPath();
+      ctx.moveTo(x, groundY);
+      ctx.lineTo(x+6*unit, groundY-6*unit);
+      ctx.lineTo(x+12*unit, groundY);
+      ctx.fill();
+    }
+
+    for (const o of obstacles) drawPipe(o, th);
+    for (const s of stars) {
+      if (s.collected) continue;
+      drawStar(s, th.star);
+    }
+    drawBall(th);
+    drawParticles();
+
+    if (flashAlpha > 0) {
+      ctx.fillStyle = `rgba(255,255,255,${flashAlpha})`;
+      ctx.fillRect(0,0,W,H);
+      flashAlpha *= 0.85;
+      if (flashAlpha < 0.01) flashAlpha = 0;
+    }
+    ctx.restore();
+  }
+
+  function drawCloud(c, color) {
+    ctx.fillStyle = color;
+    const r = 28*unit*c.s;
+    ctx.beginPath();
+    ctx.arc(c.x, c.y, r, 0, Math.PI*2);
+    ctx.arc(c.x+r*0.9, c.y+r*0.2, r*0.8, 0, Math.PI*2);
+    ctx.arc(c.x-r*0.9, c.y+r*0.2, r*0.7, 0, Math.PI*2);
+    ctx.fill();
+  }
+
+  function drawPipe(o, th) {
+    const topH = o.gapY - o.gapH/2;
+    const botY = o.gapY + o.gapH/2;
+    const botH = groundY - botY;
+    const r = 6*unit;
+    ctx.fillStyle = th.pipe;
+    roundRect(o.x - o.w/2, 0, o.w, topH, r);
+    ctx.fillStyle = th.pipeHi;
+    roundRect(o.x - o.w/2 - 4*unit, topH - 12*unit, o.w + 8*unit, 12*unit, r);
+    ctx.fillStyle = th.pipe;
+    roundRect(o.x - o.w/2, botY, o.w, botH, r);
+    ctx.fillStyle = th.pipeHi;
+    roundRect(o.x - o.w/2 - 4*unit, botY, o.w + 8*unit, 12*unit, r);
+    ctx.fillStyle = 'rgba(255,255,255,.12)';
+    ctx.fillRect(o.x - o.w/2 + 6*unit, 0, 4*unit, topH);
+    ctx.fillRect(o.x - o.w/2 + 6*unit, botY+12*unit, 4*unit, botH-12*unit);
+  }
+
+  function roundRect(x,y,w,h,r) {
+    if (h <= 0) return;
+    const rr = Math.min(r, w/2, h/2);
+    ctx.beginPath();
+    ctx.moveTo(x+rr, y);
+    ctx.lineTo(x+w-rr, y);
+    ctx.quadraticCurveTo(x+w, y, x+w, y+rr);
+    ctx.lineTo(x+w, y+h-rr);
+    ctx.quadraticCurveTo(x+w, y+h, x+w-rr, y+h);
+    ctx.lineTo(x+rr, y+h);
+    ctx.quadraticCurveTo(x, y+h, x, y+h-rr);
+    ctx.lineTo(x, y+rr);
+    ctx.quadraticCurveTo(x, y, x+rr, y);
+    ctx.closePath();
+    ctx.fill();
+  }
+
+  function drawStar(s, color) {
+    s.pulse += 0.12;
+    const r = s.r * (1 + Math.sin(s.pulse)*0.15);
+    ctx.save();
+    ctx.translate(s.x, s.y);
+    ctx.rotate(s.pulse*0.5);
+    ctx.fillStyle = color;
+    ctx.shadowColor = color;
+    ctx.shadowBlur = 12*unit;
+    ctx.beginPath();
+    for (let i = 0; i < 5; i++) {
+      const a = (i*4*Math.PI)/5 - Math.PI/2;
+      const rr = i%2===0 ? r : r*0.45;
+      ctx.lineTo(Math.cos(a)*rr, Math.sin(a)*rr);
+    }
+    ctx.closePath();
+    ctx.fill();
+    ctx.shadowBlur = 0;
+    ctx.restore();
+  }
+
+  function drawBall(th) {
+    ctx.save();
+    ctx.translate(ball.x, ball.y);
+    ctx.rotate(ball.rot);
+    const sx = 2 - ball.squash;
+    const sy = ball.squash;
+    ctx.scale(sx, sy);
+    ctx.fillStyle = 'rgba(0,0,0,.25)';
+    ctx.beginPath();
+    ctx.ellipse(0, ball.r*1.1, ball.r*1.05, ball.r*0.3, 0, 0, Math.PI*2);
+    ctx.fill();
+    const g = ctx.createRadialGradient(-ball.r*0.3, -ball.r*0.3, ball.r*0.2, 0, 0, ball.r);
+    g.addColorStop(0, '#ffffff');
+    g.addColorStop(0.35, th.star);
+    g.addColorStop(1, th.pipe);
+    ctx.fillStyle = g;
+    ctx.beginPath();
+    ctx.arc(0,0,ball.r,0,Math.PI*2);
+    ctx.fill();
+    ctx.fillStyle = 'rgba(255,255,255,.55)';
+    ctx.beginPath();
+    ctx.arc(-ball.r*0.3, -ball.r*0.35, ball.r*0.28, 0, Math.PI*2);
+    ctx.fill();
+    ctx.strokeStyle = 'rgba(0,0,0,.25)';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.arc(0,0,ball.r,0,Math.PI*2);
+    ctx.stroke();
+    ctx.restore();
+  }
+
+  // ---------- Main loop ----------
+  function loop(now) {
+    rafId = requestAnimationFrame(loop);
+    if (!lastTime) lastTime = now;
+    const dtSec = Math.min(0.05, (now - lastTime)/1000);
+    lastTime = now;
+
+    if (state === 'playing') {
+      updateGame(dtSec);
+    } else if (state === 'start') {
+      ball.y = H*0.45 + Math.sin(now/400)*8*unit;
+      ball.rot = Math.sin(now/500)*0.15;
+      ball.squash = 1;
+    }
+    if (state !== 'paused') updateParticles(dtSec*60);
+
+    draw();
+  }
+
+  // ---------- Input ----------
+  let lastTouch = 0;
+  function handleTap(e) {
+    if (e) { try { e.preventDefault(); } catch(err){} }
+    ensureAudio();
+    if (state === 'start') { startGame(); return; }
+    if (state === 'over') { restart(); return; }
+    if (state === 'paused') { resume(); return; }
+    flap();
+  }
+  canvas.addEventListener('touchstart', (e) => { lastTouch = performance.now(); handleTap(e); }, { passive: false });
+  canvas.addEventListener('mousedown', (e) => {
+    if (e.button !== 0) return;
+    if (performance.now() - lastTouch < 500) return;
+    handleTap(e);
+  });
+  overlayBtn.addEventListener('click', (e) => { e.stopPropagation();
+    if (state === 'paused') resume();
+    else if (state === 'over') restart();
+    else if (state === 'start') startGame();
+  });
+  overlay.addEventListener('click', (e) => {
+    if (e.target === overlay) handleTap(e);
+  });
+
+  window.addEventListener('keydown', (e) => {
+    if (e.code === 'Space' || e.code === 'ArrowUp' || e.code === 'KeyW') {
+      e.preventDefault();
+      handleTap(e);
+    } else if (e.code === 'KeyP' || e.code === 'Escape') {
+      e.preventDefault();
+      if (state === 'playing') pause();
+      else if (state === 'paused') resume();
+    }
+  });
+
+  pauseBtn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    if (state === 'playing') pause();
+    else if (state === 'paused') resume();
+  });
+
+  // ---------- Init ----------
+  resetGame();
+  showStartOverlay();
+  lastTime = 0;
+  rafId = requestAnimationFrame(loop);
+
+  window.addEventListener('beforeunload', () => cancelAnimationFrame(rafId));
+})();
+</script>
+</body>
+</html>
