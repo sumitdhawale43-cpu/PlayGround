@@ -1,0 +1,269 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+  <meta name="theme-color" content="#070b10">
+  <meta name="description" content="SHADOW HEIST — a five-mission stealth adventure. Slip past patrols, blind the cameras, cut the lasers, and vanish with the loot.">
+  <title>SHADOW HEIST — Stealth Adventure</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div id="app">
+    <canvas id="scene" aria-label="Shadow Heist game canvas"></canvas>
+    <div class="atmosphere" aria-hidden="true">
+      <div class="scanlines"></div>
+      <div class="vignette"></div>
+      <div class="noise"></div>
+    </div>
+
+    <!-- MAIN MENU -->
+    <section id="menu" class="screen menu-screen">
+      <header class="topbar">
+        <div class="brand">
+          <div class="brand-mark" aria-hidden="true">
+            <svg viewBox="0 0 32 32"><path d="M16 2 29 16 16 30 3 16 16 2Z"/><path d="M16 8 23 16 16 24 9 16 16 8Z"/></svg>
+          </div>
+          <div class="brand-copy">
+            <strong>SHADOW HEIST</strong>
+            <span>CONTRACT DIVISION // 05</span>
+          </div>
+        </div>
+        <div class="top-status">
+          <span class="status-dot"></span>
+          <span>SECURE LINK</span>
+          <span class="status-sep">/</span>
+          <span class="muted">NIGHT OPS</span>
+        </div>
+        <div class="top-actions">
+          <button id="helpBtn" class="icon-btn" aria-label="How to play" title="How to play">
+            <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M9.6 9.1a2.5 2.5 0 1 1 3.5 2.3c-.8.4-1.1 1-1.1 2.1"/><path d="M12 17h.01"/></svg>
+          </button>
+          <button id="soundBtn" class="icon-btn" aria-label="Toggle sound" title="Toggle sound">
+            <svg class="sound-on" viewBox="0 0 24 24"><path d="M4 9h4l5-4v14l-5-4H4V9Z"/><path d="M17 8a6 6 0 0 1 0 8M19.5 5.5a9.5 9.5 0 0 1 0 13"/></svg>
+            <svg class="sound-off" viewBox="0 0 24 24"><path d="M4 9h4l5-4v14l-5-4H4V9Z"/><path d="m17 9 5 6M22 9l-5 6"/></svg>
+          </button>
+        </div>
+      </header>
+
+      <main class="menu-grid">
+        <section class="hero-copy">
+          <div class="eyebrow"><span class="eyebrow-line"></span> PRIVATE CONTRACT · EYES ONLY</div>
+          <h1 class="game-title">
+            <span class="title-top">SHADOW</span>
+            <span class="title-bottom">HEIST</span>
+          </h1>
+          <p class="tagline">The lights are watching.<br><em>Make sure they blink first.</em></p>
+          <p class="intro">Slip through five guarded facilities. Read the patrols, cut the power, and take what isn't yours — without ever being seen.</p>
+          <div class="hero-actions">
+            <button id="deployBtn" class="primary-btn">
+              <span class="btn-kicker">MISSION 01</span>
+              <span class="btn-label">INITIATE HEIST</span>
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M14 7l5 5-5 5"/></svg>
+            </button>
+            <button id="briefBtn" class="ghost-btn">VIEW DOSSIER</button>
+          </div>
+          <div class="control-strip">
+            <div><kbd>WASD</kbd><span>MOVE</span></div>
+            <div><kbd>E</kbd><span>INTERACT</span></div>
+            <div><kbd>Q</kbd><span>THROW</span></div>
+            <div><kbd>C</kbd><span>CROUCH</span></div>
+            <div><kbd>SHIFT</kbd><span>SPRINT</span></div>
+          </div>
+        </section>
+
+        <aside class="ops-panel">
+          <div class="ops-head">
+            <div>
+              <span class="micro-label">AVAILABLE CONTRACTS</span>
+              <h2>OPERATIONS</h2>
+            </div>
+            <span class="ops-count" id="missionCount">05</span>
+          </div>
+          <div id="missionList" class="mission-list" role="list"></div>
+          <div class="dossier">
+            <div class="dossier-top">
+              <span id="dossierTag" class="micro-label">ACTIVE OPERATION</span>
+              <span id="dossierDifficulty" class="difficulty-tag">LOW RISK</span>
+            </div>
+            <h3 id="dossierName">THE GILDED GALLERY</h3>
+            <p id="dossierBrief">A private collection. One sapphire idol. Too many cameras. Get in through the service halls and vanish before the morning shift.</p>
+            <div class="dossier-meta">
+              <div><b id="dossierGuards">02</b><span>GUARDS</span></div>
+              <div><b id="dossierCams">01</b><span>CAMERAS</span></div>
+              <div><b id="dossierLoot">01</b><span>OBJECTIVES</span></div>
+            </div>
+          </div>
+        </aside>
+      </main>
+
+      <footer class="menu-footer">
+        <div class="footer-note"><span class="pulse-dot"></span> FACILITY SYSTEMS ONLINE</div>
+        <div class="footer-tip" id="menuTip">TIP // Guards investigate thrown objects. Use the noise, not the door.</div>
+        <div class="footer-build">V.01.7 // NIGHTFALL ENGINE</div>
+      </footer>
+    </section>
+
+    <!-- IN-GAME HUD -->
+    <section id="gameUI" class="screen game-ui is-hidden" aria-hidden="true">
+      <header class="hud-top">
+        <div class="hud-mission">
+          <button id="pauseBtn" class="hud-icon" aria-label="Pause">
+            <svg viewBox="0 0 24 24"><path d="M8 6v12M16 6v12"/></svg>
+          </button>
+          <div>
+            <span id="hudMissionNo" class="micro-label">MISSION 01</span>
+            <h2 id="hudMissionName">THE GILDED GALLERY</h2>
+          </div>
+        </div>
+
+        <div class="alert-cluster">
+          <div class="alert-label-row">
+            <span class="micro-label">FACILITY ALERT</span>
+            <span id="alertState" class="alert-state">UNDETECTED</span>
+          </div>
+          <div class="alert-track">
+            <div id="alertFill" class="alert-fill"></div>
+            <div class="alert-ticks"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+          </div>
+          <div class="alert-foot"><span>QUIET</span><span>LOCKDOWN</span></div>
+        </div>
+
+        <div class="hud-objectives">
+          <div class="obj-head"><span class="micro-label">OBJECTIVES</span><span id="objectiveCount">0 / 1</span></div>
+          <div id="objectiveList"></div>
+        </div>
+      </header>
+
+      <div class="visibility-chip" id="visibilityChip">
+        <span class="eye"></span><span id="visibilityText">CONCEALED</span>
+      </div>
+
+      <div id="interactPrompt" class="interact-prompt is-hidden">
+        <span class="prompt-key">E</span>
+        <span id="interactText">SEARCH</span>
+        <span class="prompt-progress"><i id="promptProgress"></i></span>
+      </div>
+
+      <div class="hud-bottom">
+        <div class="tool-row">
+          <div class="tool" id="throwTool">
+            <div class="tool-icon rock-icon"><svg viewBox="0 0 24 24"><path d="m4 15 4-8 7-2 5 5-2 8-8 3-6-6Z"/><path d="m9 14 3-4 4 1-1 4-4 1-2-2Z"/></svg></div>
+            <div class="tool-copy"><b>NOISE MAKER</b><span id="throwStatus">READY</span></div>
+            <div class="cooldown-ring" id="cooldownRing"></div>
+          </div>
+          <div class="tool">
+            <div class="tool-icon"><svg viewBox="0 0 24 24"><path d="M4 18 12 5l8 13H4Z"/><path d="M12 10v4M12 16h.01"/></svg></div>
+            <div class="tool-copy"><b>STANCE</b><span id="stanceLabel">STEALTH</span></div>
+          </div>
+        </div>
+        <div class="desktop-hints">
+          <span><kbd>WASD</kbd> MOVE</span>
+          <span><kbd>E</kbd> INTERACT</span>
+          <span><kbd>Q</kbd> THROW</span>
+          <span><kbd>C</kbd> CROUCH</span>
+          <span><kbd>SHIFT</kbd> SPRINT</span>
+        </div>
+        <div class="objective-summary" id="objectiveSummary">
+          <span class="micro-label">EXTRACTION</span>
+          <b>LOCATE THE SAPPHIRE IDOL</b>
+        </div>
+      </div>
+
+      <div class="toast" id="toast">
+        <span class="toast-kicker" id="toastKicker">OBJECTIVE</span>
+        <span id="toastText">Sapphire Idol secured</span>
+      </div>
+
+      <div class="mission-intro" id="missionIntro">
+        <div class="intro-line"></div>
+        <span class="micro-label" id="introLabel">MISSION 01 // PRAGUE</span>
+        <h2 id="introTitle">THE GILDED GALLERY</h2>
+        <p id="introObjective">STEAL THE SAPPHIRE IDOL</p>
+        <div class="intro-line"></div>
+      </div>
+
+      <!-- Mobile controls -->
+      <div class="touch-controls" id="touchControls">
+        <div class="joystick-zone" id="joystickZone">
+          <div class="joystick-base">
+            <div class="joystick-knob" id="joystickKnob"></div>
+          </div>
+        </div>
+        <div class="touch-actions">
+          <button class="touch-btn throw" id="touchThrow" aria-label="Throw noise maker"><svg viewBox="0 0 24 24"><path d="m4 15 4-8 7-2 5 5-2 8-8 3-6-6Z"/></svg><span>NOISE</span></button>
+          <button class="touch-btn interact" id="touchInteract" aria-label="Interact"><span class="touch-key">E</span><span>USE</span></button>
+          <button class="touch-btn crouch" id="touchCrouch" aria-label="Toggle crouch"><svg viewBox="0 0 24 24"><path d="M7 4h7l2 8-4 7H6l3-8-2-7Z"/></svg><span>CROUCH</span></button>
+        </div>
+        <button class="touch-pause" id="touchPause" aria-label="Pause"><svg viewBox="0 0 24 24"><path d="M8 6v12M16 6v12"/></svg></button>
+      </div>
+    </section>
+
+    <!-- MODALS -->
+    <div class="modal-layer is-hidden" id="modalLayer">
+      <div class="modal pause-modal is-hidden" id="pauseModal">
+        <span class="micro-label">OPERATION SUSPENDED</span>
+        <h2>PAUSED</h2>
+        <p>The facility keeps moving. So should you.</p>
+        <div class="modal-actions">
+          <button id="resumeBtn" class="primary-btn compact"><span class="btn-label">RESUME</span></button>
+          <button id="restartBtn" class="ghost-btn">RESTART MISSION</button>
+          <button id="abortBtn" class="text-btn">ABORT TO MENU</button>
+        </div>
+      </div>
+
+      <div class="modal brief-modal is-hidden" id="briefModal">
+        <button class="modal-close" id="closeBrief" aria-label="Close">×</button>
+        <span class="micro-label" id="briefKicker">DOSSIER // MISSION 01</span>
+        <h2 id="briefTitle">THE GILDED GALLERY</h2>
+        <p id="briefBody">A private collection. One sapphire idol. Too many cameras.</p>
+        <div class="brief-grid">
+          <div><span class="micro-label">LOCATION</span><b id="briefLocation">PRAGUE · CZECHIA</b></div>
+          <div><span class="micro-label">THREAT</span><b id="briefThreat">LOW RISK</b></div>
+          <div><span class="micro-label">PRIMARY</span><b id="briefPrimary">SAPPHIRE IDOL</b></div>
+          <div><span class="micro-label">EXTRACTION</span><b>SOUTH SERVICE EXIT</b></div>
+        </div>
+        <div class="brief-note"><span class="micro-label">HANDLER'S NOTE</span><p id="briefNote">Stay low. The guards are lazy, the cameras are not.</p></div>
+        <div class="modal-actions">
+          <button id="briefDeployBtn" class="primary-btn compact"><span class="btn-label">BEGIN OPERATION</span><svg viewBox="0 0 24 24"><path d="M5 12h14M14 7l5 5-5 5"/></svg></button>
+        </div>
+      </div>
+
+      <div class="modal help-modal is-hidden" id="helpModal">
+        <button class="modal-close" id="closeHelp" aria-label="Close">×</button>
+        <span class="micro-label">FIELD MANUAL</span>
+        <h2>BLEND IN. BREAK OUT.</h2>
+        <div class="help-grid">
+          <div class="help-item"><div class="help-keys"><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd></div><h3>MOVE</h3><p>Stay in the dark. Crouch with <kbd>C</kbd> to move quietly and shrink your profile.</p></div>
+          <div class="help-item"><div class="help-keys"><kbd>E</kbd></div><h3>INTERACT</h3><p>Hide in lockers, slice terminals, grab the loot, and extract at the glowing exit.</p></div>
+          <div class="help-item"><div class="help-keys"><kbd>Q</kbd></div><h3>MAKE NOISE</h3><p>Throw a noise maker to pull guards off their route. Use the landings, not the walls.</p></div>
+          <div class="help-item"><div class="help-keys"><kbd>SHIFT</kbd></div><h3>SPRINT</h3><p>Fast, but loud. Sprinting creates a sound radius guards can hear through walls.</p></div>
+          <div class="help-item"><div class="help-keys"><span class="mini-eye"></span></div><h3>STAY UNSEEN</h3><p>Vision cones show guard sight. Cameras sweep. Lasers pulse. Alert at 100% ends the mission.</p></div>
+          <div class="help-item"><div class="help-keys"><span class="mini-diamond"></span></div><h3>KNOW THE ROUTES</h3><p>Ventilation shafts conceal you completely. Every facility has more than one way in.</p></div>
+        </div>
+      </div>
+
+      <div class="modal result-modal is-hidden" id="resultModal">
+        <div class="result-kicker" id="resultKicker">CONTRACT COMPLETE</div>
+        <h2 id="resultTitle">CLEAN GETAWAY</h2>
+        <p id="resultSub">The idol is secure. Nobody saw a thing.</p>
+        <div class="result-stars" id="resultStars"><span>★</span><span>★</span><span>★</span></div>
+        <div class="result-stats">
+          <div><span>TIME</span><b id="resultTime">02:14</b></div>
+          <div><span>PEAK ALERT</span><b id="resultAlert">18%</b></div>
+          <div><span>LOOT</span><b id="resultLoot">1 / 2</b></div>
+        </div>
+        <div class="result-actions">
+          <button id="nextBtn" class="primary-btn compact"><span class="btn-label">NEXT OPERATION</span><svg viewBox="0 0 24 24"><path d="M5 12h14M14 7l5 5-5 5"/></svg></button>
+          <button id="retryBtn" class="ghost-btn">REPLAY</button>
+          <button id="menuBtn" class="text-btn">RETURN TO OPS</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="rotateHint" class="rotate-hint is-hidden">ROTATE DEVICE FOR A WIDER VIEW</div>
+  </div>
+  <script src="js/levels.js"></script>
+  <script src="game.js"></script>
+</body>
+</html>
