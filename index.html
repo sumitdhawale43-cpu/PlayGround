@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <meta name="theme-color" content="#07090c" />
+  <meta name="description" content="ZOMBIE OUTBREAK — a top-down survival shooter. Endless waves, three weapons, bosses every five waves." />
+  <title>ZOMBIE OUTBREAK — Survival Protocol</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' fill='%2307090c'/%3E%3Ccircle cx='32' cy='28' r='14' fill='%238ac926'/%3E%3Ccircle cx='26' cy='25' r='3' fill='%230a0d0a'/%3E%3Ccircle cx='38' cy='25' r='3' fill='%230a0d0a'/%3E%3Cpath d='M22 36h20v4H22z' fill='%230a0d0a'/%3E%3Cpath d='M10 54h44v6H10z' fill='%23e5383b'/%3E%3C/svg%3E" />
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+  <div id="app">
+    <canvas id="game" aria-label="Zombie Outbreak game arena"></canvas>
+
+    <div class="fx-vignette" aria-hidden="true"></div>
+    <div id="damage-flash" aria-hidden="true"></div>
+    <div id="nuke-flash" aria-hidden="true"></div>
+
+    <!-- ===================== HUD ===================== -->
+    <div id="hud" class="hud hidden" aria-live="off">
+      <div class="hud-top">
+        <div class="hud-left">
+          <div class="hud-brand"><span class="brand-dot"></span>OUTBREAK<span class="brand-sub">// SURVIVAL</span></div>
+          <div class="panel health-panel">
+            <div class="health-head"><span>VITALS</span><span id="hp-text">100</span></div>
+            <div class="bar health-bar"><div id="hp-fill" class="bar-fill"></div></div>
+            <div class="bar shield-bar hidden" id="shield-wrap"><div id="shield-fill" class="bar-fill"></div></div>
+          </div>
+        </div>
+
+        <div class="hud-center">
+          <div class="wave-wrap">
+            <div class="wave-pill"><span class="wave-label">WAVE</span><span id="wave-num">01</span></div>
+            <div class="wave-sub"><span class="pulse-dot"></span><span id="enemies-num">0</span> HOSTILES</div>
+          </div>
+          <div id="boss-bar" class="boss-bar hidden">
+            <div class="boss-head"><span class="boss-skull">☠</span><span id="boss-name">THE WARDEN</span><span id="boss-hp-text"></span></div>
+            <div class="bar boss-hp"><div id="boss-fill" class="bar-fill"></div></div>
+          </div>
+        </div>
+
+        <div class="hud-right">
+          <div class="stat-chip coin-chip" title="Coins">
+            <span class="coin-icon">¢</span><span id="coin-num">0</span>
+          </div>
+          <div class="stat-chip score-chip"><span class="stat-label">SCORE</span><span id="score-num">0</span></div>
+          <button id="btn-mute" class="icon-btn" title="Toggle sound" aria-label="Toggle sound">
+            <span class="sound-on">♪</span>
+          </button>
+          <button id="btn-pause" class="icon-btn" title="Pause (Esc)" aria-label="Pause">
+            <span class="pause-glyph">❚❚</span>
+          </button>
+        </div>
+      </div>
+
+      <div class="minimap-wrap" id="minimap-wrap">
+        <div class="minimap-head"><span>RECON</span><span class="live-dot"></span></div>
+        <canvas id="minimap" width="140" height="140"></canvas>
+      </div>
+
+      <div class="hud-bottom">
+        <div id="weapon-list" class="weapon-list" role="group" aria-label="Weapons"></div>
+        <div id="power-list" class="power-list" aria-live="polite"></div>
+        <div class="control-hint" id="control-hint">
+          <span><b>WASD</b> MOVE</span><span><b>MOUSE</b> AIM / FIRE</span><span><b>R</b> RELOAD</span><span><b>SPACE</b> DASH</span><span><b>1–3</b> SWAP</span>
+        </div>
+      </div>
+
+      <div id="wave-banner" class="wave-banner" aria-live="polite">
+        <div class="banner-line"></div>
+        <div id="banner-title" class="banner-title">WAVE 1</div>
+        <div id="banner-sub" class="banner-sub">THEY'RE COMING</div>
+        <div class="banner-line"></div>
+      </div>
+
+      <div id="toast" class="toast"></div>
+    </div>
+
+    <!-- ===================== MOBILE ===================== -->
+    <div id="mobile-controls" class="mobile-controls">
+      <div class="joystick" data-stick="move" aria-label="Movement joystick">
+        <div class="stick-base"><div class="stick-knob"></div></div>
+        <span class="stick-label">MOVE</span>
+      </div>
+      <div class="mobile-actions">
+        <button class="mob-btn" data-action="reload" aria-label="Reload">RELOAD</button>
+        <button class="mob-btn dash-btn" data-action="dash" aria-label="Dash">DASH</button>
+      </div>
+      <div class="joystick" data-stick="aim" aria-label="Aim and fire joystick">
+        <div class="stick-base"><div class="stick-knob"></div></div>
+        <span class="stick-label">AIM / FIRE</span>
+      </div>
+    </div>
+
+    <!-- ===================== MENU ===================== -->
+    <div id="menu" class="overlay menu-overlay active">
+      <div class="menu-inner">
+        <div class="menu-panel">
+          <div class="eyebrow"><span class="eyebrow-line"></span>SURVIVAL PROTOCOL // 07</div>
+          <h1 class="game-title">
+            <span class="title-top">ZOMBIE</span>
+            <span class="title-bottom" data-text="OUTBREAK">OUTBREAK</span>
+          </h1>
+          <p class="tagline">The dead don't stop.<br /><em>Neither do you.</em></p>
+
+          <div class="menu-actions">
+            <button id="btn-play" class="btn btn-primary btn-lg"><span class="btn-glint"></span>DEPLOY<span class="btn-arrow">→</span></button>
+            <button id="btn-how" class="btn btn-ghost">HOW TO PLAY</button>
+          </div>
+
+          <div class="menu-meta">
+            <div class="meta-cell"><span>BEST WAVE</span><strong id="best-wave">0</strong></div>
+            <div class="meta-cell"><span>BEST SCORE</span><strong id="best-score">0</strong></div>
+            <div class="meta-cell"><span>SURVIVORS</span><strong>1</strong></div>
+          </div>
+
+          <div class="menu-controls">
+            <span><b>WASD</b> MOVE</span><span><b>MOUSE</b> AIM / FIRE</span><span><b>R</b> RELOAD</span><span><b>SPACE</b> DASH</span>
+          </div>
+          <div class="mobile-menu-note">DUAL-STICK CONTROLS ACTIVE · SURVIVE THE NIGHT</div>
+        </div>
+
+        <div class="menu-side">
+          <div class="side-rule"></div>
+          <p class="side-quote">“When the sirens stopped,<br />we stopped counting.”</p>
+          <p class="side-cite">— QUARANTINE LOG, DAY 19</p>
+          <div class="side-stamp">BIOHAZARD<br /><span>LEVEL 5</span></div>
+        </div>
+      </div>
+      <div class="menu-footer">
+        <span>BUILD 1.0.7</span><span id="menu-mute" class="menu-mute">SOUND: ON</span><span>© DEAD SIGNAL STUDIOS</span>
+      </div>
+    </div>
+
+    <!-- ===================== HOW TO PLAY ===================== -->
+    <div id="howto" class="overlay howto-overlay">
+      <div class="panel modal-panel">
+        <div class="modal-head">
+          <div>
+            <div class="eyebrow"><span class="eyebrow-line"></span>FIELD MANUAL</div>
+            <h2>HOW TO <span class="accent">SURVIVE</span></h2>
+          </div>
+          <button id="btn-how-close" class="icon-btn close-btn" aria-label="Close">✕</button>
+        </div>
+
+        <div class="howto-grid">
+          <section>
+            <h3>CONTROLS</h3>
+            <ul class="key-list">
+              <li><span class="keys"><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd></span><span>Move</span></li>
+              <li><span class="keys"><kbd>MOUSE</kbd></span><span>Aim · hold to fire</span></li>
+              <li><span class="keys"><kbd>R</kbd></span><span>Reload</span></li>
+              <li><span class="keys"><kbd>SPACE</kbd></span><span>Dash (brief invulnerability)</span></li>
+              <li><span class="keys"><kbd>1</kbd><kbd>2</kbd><kbd>3</kbd></span><span>Switch weapon</span></li>
+              <li><span class="keys"><kbd>ESC</kbd></span><span>Pause</span></li>
+            </ul>
+            <p class="manual-note">On touch devices, use the two joysticks: left to move, right to aim and fire automatically.</p>
+          </section>
+
+          <section>
+            <h3>THE DEAD</h3>
+            <ul class="enemy-list">
+              <li><span class="enemy-dot walker"></span><div><b>WALKER</b><small>Slow, relentless. Bread and butter.</small></div></li>
+              <li><span class="enemy-dot runner"></span><div><b>RUNNER</b><small>Fast. Lunges when it smells blood.</small></div></li>
+              <li><span class="enemy-dot spitter"></span><div><b>SPITTER</b><small>Keeps its distance, lobs acid.</small></div></li>
+              <li><span class="enemy-dot brute"></span><div><b>BRUTE</b><small>Tanky. Ground-slam AoE.</small></div></li>
+              <li><span class="enemy-dot screamer"></span><div><b>SCREAMER</b><small>Buffs the horde. Kill it first.</small></div></li>
+              <li><span class="enemy-dot boss"></span><div><b>BOSS</b><small>Every fifth wave. Bring everything.</small></div></li>
+            </ul>
+          </section>
+
+          <section>
+            <h3>ARSENAL</h3>
+            <ul class="weapon-help">
+              <li><b>RANGER M9</b><small>Pistol · accurate · infinite reserve</small><span class="ammo-type">12 / ∞</span></li>
+              <li><b>MARROW 12</b><small>Shotgun · eight pellets · brutal up close</small><span class="ammo-type">6 / 42</span></li>
+              <li><b>VECTOR 9</b><small>SMG · high rate of fire · crowd control</small><span class="ammo-type">30 / 210</span></li>
+            </ul>
+            <p class="manual-note">Earn coins from kills. Spend them between waves on augments. Grab glowing crates for power-ups.</p>
+          </section>
+        </div>
+
+        <button id="btn-how-play" class="btn btn-primary">DEPLOY NOW</button>
+      </div>
+    </div>
+
+    <!-- ===================== PAUSE ===================== -->
+    <div id="pause" class="overlay">
+      <div class="panel modal-panel compact">
+        <div class="eyebrow center"><span class="eyebrow-line"></span>TACTICAL HOLD<span class="eyebrow-line"></span></div>
+        <h2 class="center">PAUSED</h2>
+        <p class="modal-copy center">The horde is holding its breath.</p>
+        <div class="pause-stats">
+          <div><span>WAVE</span><strong id="pause-wave">1</strong></div>
+          <div><span>KILLS</span><strong id="pause-kills">0</strong></div>
+          <div><span>COINS</span><strong id="pause-coins">0</strong></div>
+        </div>
+        <div class="modal-actions">
+          <button id="btn-resume" class="btn btn-primary">RESUME</button>
+          <button id="btn-pause-restart" class="btn btn-ghost">RESTART RUN</button>
+          <button id="btn-pause-menu" class="btn btn-quiet">ABANDON → MENU</button>
+        </div>
+        <p class="manual-note center">Press <kbd>ESC</kbd> to jump back in.</p>
+      </div>
+    </div>
+
+    <!-- ===================== UPGRADE ===================== -->
+    <div id="upgrade" class="overlay">
+      <div class="panel upgrade-panel">
+        <div class="upgrade-head">
+          <div>
+            <div class="eyebrow"><span class="eyebrow-line"></span>SECTOR SECURED</div>
+            <h2>WAVE <span id="up-wave" class="accent">1</span> CLEARED</h2>
+            <p class="modal-copy">Spend <span class="coin-inline">¢</span> <span id="up-coins">0</span> on a field augment. One per break.</p>
+          </div>
+          <div class="wave-bonus"><span>WAVE BONUS</span><strong id="up-bonus">+0</strong></div>
+        </div>
+
+        <div id="upgrade-grid" class="upgrade-grid"></div>
+
+        <div class="upgrade-footer">
+          <span class="upgrade-tip" id="upgrade-tip">Choose wisely. The next wave hits harder.</span>
+          <button id="btn-next-wave" class="btn btn-primary">NEXT WAVE<span class="btn-arrow">→</span></button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===================== GAME OVER ===================== -->
+    <div id="gameover" class="overlay gameover-overlay">
+      <div class="gameover-inner">
+        <div class="eyebrow center"><span class="eyebrow-line"></span>SIGNAL LOST<span class="eyebrow-line"></span></div>
+        <h2 class="death-title" data-text="YOU DIED">YOU DIED</h2>
+        <p class="death-sub">The outbreak continues without you.</p>
+
+        <div class="result-grid">
+          <div class="result-cell"><span>WAVE REACHED</span><strong id="go-wave">1</strong></div>
+          <div class="result-cell"><span>ZOMBIES KILLED</span><strong id="go-kills">0</strong></div>
+          <div class="result-cell"><span>SCORE</span><strong id="go-score">0</strong></div>
+          <div class="result-cell"><span>COINS EARNED</span><strong id="go-coins">0</strong></div>
+        </div>
+
+        <div id="new-best" class="new-best hidden">★ NEW PERSONAL BEST ★</div>
+
+        <div class="modal-actions horizontal">
+          <button id="btn-retry" class="btn btn-primary btn-lg">TRY AGAIN<span class="btn-arrow">↻</span></button>
+          <button id="btn-gameover-menu" class="btn btn-ghost">MAIN MENU</button>
+        </div>
+        <p class="manual-note center">Tip: dash through a horde instead of around it. Invulnerability is your friend.</p>
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="js/game.js"></script>
+</body>
+</html>
