@@ -1,0 +1,201 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1, user-scalable=no" />
+    <meta name="theme-color" content="#07090c" />
+    <meta name="description" content="NIGHTFALL — a tactical first-person survival shooter built with Three.js." />
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' fill='%2307090c'/%3E%3Cpath d='M14 46V18h7l14 19V18h7v28h-7L21 27v19z' fill='%23f0a02a'/%3E%3C/svg%3E" />
+    <title>NIGHTFALL // Sector 7</title>
+    <link rel="stylesheet" href="/src/style.css" />
+  </head>
+  <body>
+    <canvas id="game"></canvas>
+
+    <div id="vignette" aria-hidden="true"></div>
+    <div id="grain" aria-hidden="true"></div>
+    <div id="damage-arrow" aria-hidden="true"><i></i></div>
+    <div id="low-health" aria-hidden="true"></div>
+
+    <!-- ============ HUD ============ -->
+    <div id="hud" class="hidden" aria-live="polite">
+      <div class="hud-top-left">
+        <div class="wave-chip"><span class="chip-dot"></span><span id="hud-wave">WAVE 01</span></div>
+        <div class="objective"><span class="obj-label">SECTOR 7</span><span id="hud-remaining">HOSTILES 00</span></div>
+      </div>
+
+      <div class="compass">
+        <div class="compass-ticks"></div>
+        <div class="compass-caret"></div>
+        <span id="compass-heading">N&nbsp;000</span>
+      </div>
+
+      <div class="hud-top-right">
+        <div class="score-box">
+          <span class="score-label">SCORE</span>
+          <span id="hud-score">000000</span>
+        </div>
+        <div class="radar-wrap">
+          <canvas id="radar" width="168" height="168"></canvas>
+          <span class="radar-label">TAC&nbsp;SCAN</span>
+        </div>
+      </div>
+
+      <div id="killfeed"></div>
+      <div id="banner" class="banner">
+        <span class="banner-kicker">INCOMING</span>
+        <h2 id="banner-title">WAVE 01</h2>
+        <p id="banner-sub">HOSTILES INBOUND</p>
+      </div>
+
+      <div id="crosshair" aria-hidden="true">
+        <i class="ch-top"></i><i class="ch-right"></i><i class="ch-bottom"></i><i class="ch-left"></i><b></b>
+      </div>
+      <div id="hitmarker" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
+      <div id="reload-hint">
+        <span>RELOADING</span>
+        <div class="reload-bar"><i id="reload-fill"></i></div>
+      </div>
+
+      <div class="hud-bottom-left">
+        <div class="stat-row"><span class="stat-icon">+</span><span id="hud-health">100</span><span class="stat-unit">HP</span></div>
+        <div class="health-bar"><i id="health-fill"></i></div>
+        <div class="health-meta"><span>OPERATOR</span><span id="hud-health-state">STABLE</span></div>
+      </div>
+
+      <div class="hud-bottom-right">
+        <div class="ammo-line">
+          <span id="hud-ammo">30</span><span class="ammo-divider">/</span><span id="hud-reserve">150</span>
+        </div>
+        <div class="ammo-meta"><span>5.56&nbsp;AR</span><span id="hud-weapon">VECTOR-4</span></div>
+        <div class="grenade-line"><span class="nade-icon">◈</span><span id="hud-grenades">3</span><span class="nade-label">FRAG</span></div>
+      </div>
+
+      <div id="hint-bar">WASD MOVE&nbsp;&nbsp;·&nbsp;&nbsp;SHIFT SPRINT&nbsp;&nbsp;·&nbsp;&nbsp;R RELOAD&nbsp;&nbsp;·&nbsp;&nbsp;G FRAG&nbsp;&nbsp;·&nbsp;&nbsp;ESC PAUSE</div>
+    </div>
+
+    <!-- ============ MOBILE CONTROLS ============ -->
+    <div id="mobile-controls" aria-hidden="true">
+      <div id="joy-base"><div id="joy-knob"></div></div>
+      <div class="touch-actions">
+        <button id="btn-touch-grenade" class="tbtn small" type="button">◈</button>
+        <button id="btn-touch-reload" class="tbtn small" type="button">R</button>
+        <button id="btn-touch-jump" class="tbtn small" type="button">↑</button>
+        <button id="btn-touch-ads" class="tbtn" type="button">ADS</button>
+        <button id="btn-touch-fire" class="tbtn fire" type="button"><i></i></button>
+      </div>
+    </div>
+
+    <!-- ============ MENU ============ -->
+    <div id="screen-menu" class="screen">
+      <div class="menu-shade"></div>
+      <div class="menu-content">
+        <div class="eyebrow"><i></i>TACTICAL SURVIVAL · SECTOR 7<i></i></div>
+        <h1 class="logo">NIGHT<span>FALL</span></h1>
+        <p class="tagline">The grid went dark. You are the only thing standing between the extraction zone and the last wave.</p>
+        <div class="menu-actions">
+          <button id="btn-deploy" class="btn primary" type="button">
+            <span class="btn-kicker">OPERATION BLACKOUT</span>
+            <span class="btn-main">DEPLOY</span>
+          </button>
+          <div class="menu-row">
+            <button id="btn-settings" class="btn ghost" type="button">SETTINGS</button>
+            <button id="btn-briefing" class="btn ghost" type="button">BRIEFING</button>
+          </div>
+        </div>
+        <div class="menu-stats">
+          <div><span>MODE</span><b>ENDURE</b></div>
+          <div><span>THREAT</span><b>SEVERE</b></div>
+          <div><span>BUILD</span><b>1.0.4</b></div>
+        </div>
+      </div>
+      <div class="menu-footer"><span>THREE.JS RENDERER</span><span>WEBGL · 60FPS TARGET</span><span>© 2026 NIGHTFALL</span></div>
+    </div>
+
+    <!-- ============ BRIEFING ============ -->
+    <div id="screen-briefing" class="screen modal hidden">
+      <div class="panel">
+        <span class="panel-kicker">MISSION BRIEFING</span>
+        <h2>HOLD THE ZONE</h2>
+        <p>Hostile squads are pushing through the port perimeter. Hold position, manage your rifle, and clear every wave. Ammunition and frag charges are restocked between waves.</p>
+        <div class="brief-grid">
+          <div><kbd>W A S D</kbd><span>MOVE</span></div>
+          <div><kbd>MOUSE</kbd><span>AIM</span></div>
+          <div><kbd>LMB</kbd><span>FIRE</span></div>
+          <div><kbd>RMB</kbd><span>AIM DOWN SIGHTS</span></div>
+          <div><kbd>SHIFT</kbd><span>SPRINT</span></div>
+          <div><kbd>SPACE</kbd><span>JUMP</span></div>
+          <div><kbd>R</kbd><span>RELOAD</span></div>
+          <div><kbd>G</kbd><span>FRAG GRENADE</span></div>
+        </div>
+        <p class="brief-note">Headshots deal critical damage. Retreat, regenerate, and use the containers for cover.</p>
+        <button id="btn-briefing-close" class="btn primary compact" type="button"><span class="btn-main">UNDERSTOOD</span></button>
+      </div>
+    </div>
+
+    <!-- ============ SETTINGS ============ -->
+    <div id="screen-settings" class="screen modal hidden">
+      <div class="panel">
+        <span class="panel-kicker">SYSTEM</span>
+        <h2>SETTINGS</h2>
+        <div class="setting">
+          <label for="set-sens">LOOK SENSITIVITY <b id="set-sens-val">1.0</b></label>
+          <input id="set-sens" type="range" min="0.2" max="2.5" step="0.05" value="1" />
+        </div>
+        <div class="setting">
+          <label for="set-quality">RENDER QUALITY</label>
+          <select id="set-quality">
+            <option value="high">HIGH · SHADOWS + BLOOM</option>
+            <option value="medium">MEDIUM · SHADOWS</option>
+            <option value="low">LOW · PERFORMANCE</option>
+          </select>
+        </div>
+        <div class="setting toggles">
+          <label class="toggle"><input id="set-invert" type="checkbox" /><span></span>INVERT LOOK Y</label>
+          <label class="toggle"><input id="set-audio" type="checkbox" checked /><span></span>AUDIO</label>
+        </div>
+        <button id="btn-settings-close" class="btn primary compact" type="button"><span class="btn-main">APPLY</span></button>
+      </div>
+    </div>
+
+    <!-- ============ PAUSE ============ -->
+    <div id="screen-pause" class="screen modal hidden">
+      <div class="panel narrow">
+        <span class="panel-kicker">TACTICAL PAUSE</span>
+        <h2>STANDBY</h2>
+        <div class="pause-stats"><div><span>WAVE</span><b id="pause-wave">01</b></div><div><span>SCORE</span><b id="pause-score">0</b></div></div>
+        <button id="btn-resume" class="btn primary compact" type="button"><span class="btn-main">RESUME</span></button>
+        <button id="btn-pause-settings" class="btn ghost compact" type="button">SETTINGS</button>
+        <button id="btn-restart" class="btn ghost compact" type="button">RESTART OPERATION</button>
+        <button id="btn-quit" class="btn ghost compact danger" type="button">ABORT TO MENU</button>
+      </div>
+    </div>
+
+    <!-- ============ GAME OVER ============ -->
+    <div id="screen-over" class="screen modal hidden">
+      <div class="panel narrow over-panel">
+        <span class="panel-kicker danger-text">OPERATOR DOWN</span>
+        <h2>MISSION FAILED</h2>
+        <p id="over-flavour">The perimeter has fallen. Regroup and try again.</p>
+        <div class="over-stats">
+          <div><span>WAVES CLEARED</span><b id="over-wave">0</b></div>
+          <div><span>HOSTILES DOWN</span><b id="over-kills">0</b></div>
+          <div><span>ACCURACY</span><b id="over-acc">0%</b></div>
+          <div><span>FINAL SCORE</span><b id="over-score">0</b></div>
+        </div>
+        <button id="btn-retry" class="btn primary compact" type="button"><span class="btn-main">REDEPLOY</span></button>
+        <button id="btn-over-menu" class="btn ghost compact" type="button">RETURN TO MENU</button>
+      </div>
+    </div>
+
+    <div id="loader">
+      <div class="loader-inner">
+        <div class="loader-mark">NF<span>7</span></div>
+        <div class="loader-text">INITIALIZING TACTICAL RENDERER</div>
+        <div class="loader-bar"><i id="loader-fill"></i></div>
+      </div>
+    </div>
+
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>
