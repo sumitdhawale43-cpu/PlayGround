@@ -48,7 +48,6 @@ jobs:
       sender: ${{ needs.prepare.outputs.sender }}
       target_ref: ${{ needs.prepare.outputs.target_ref }}
       target_sha: ${{ needs.prepare.outputs.target_sha }}
-      opencode_version: ${{ needs.prepare.outputs.opencode_version }}
     secrets:
       OPENCODE_API_KEY: ${{ secrets.OPENCODE_API_KEY }}
       OPENCODE_AUTH_JSON: ${{ secrets.OPENCODE_AUTH_JSON }}
