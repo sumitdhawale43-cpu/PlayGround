@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+<meta name="theme-color" content="#070b16" />
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cpath fill='%237cecff' d='M32 2 38 25 62 32 38 39 32 62 25 39 2 32 25 25z'/%3E%3C/svg%3E" />
+<title>ASTRA: REBIRTH — Anime Open-World Action RPG</title>
+<link rel="stylesheet" href="./src/style.css" />
+<script type="importmap">
+{ "imports": {
+  "three": "./vendor/three.module.js",
+  "three/addons/": "./vendor/"
+} }
+</script>
+</head>
+<body>
+<div id="app">
+  <canvas id="game-canvas"></canvas>
+  <div id="cinema-bars" class="hidden"><div class="bar top"></div><div class="bar bottom"></div></div>
+  <div id="vignette"></div>
+  <div id="flash"></div>
+  <div id="slowmo-overlay"></div>
+
+  <!-- ===================== HUD ===================== -->
+  <div id="hud" class="hidden">
+    <div class="hud-corner top-left">
+      <div class="player-panel">
+        <div class="avatar-frame"><div id="avatar-glyph">K</div><div class="avatar-ring"></div></div>
+        <div class="player-bars">
+          <div class="player-name-row"><span id="hud-char-name">KAEL</span><span id="hud-level" class="lvl">Lv.1</span></div>
+          <div class="bar hp"><div id="hp-fill" class="fill"></div><span id="hp-text" class="bar-text">120 / 120</span></div>
+          <div class="bar stamina"><div id="stamina-fill" class="fill"></div><span id="stamina-text" class="bar-text">100</span></div>
+          <div class="bar xp thin"><div id="xp-fill" class="fill"></div></div>
+        </div>
+      </div>
+      <div class="currency-row">
+        <div class="currency"><span class="coin">◈</span><span id="hud-gold">0</span></div>
+        <div class="currency"><span class="coin shard">✦</span><span id="hud-shards">0</span></div>
+        <div class="currency"><span class="coin xp">✧</span><span id="hud-xp">0</span></div>
+      </div>
+    </div>
+
+    <div class="hud-corner top-right">
+      <div class="minimap-wrap">
+        <canvas id="minimap" width="220" height="220"></canvas>
+        <div class="minimap-ring"></div>
+        <div class="minimap-compass">N</div>
+        <div class="minimap-region"><span id="hud-region">AETHERIA</span><span id="hud-time">18:42</span></div>
+      </div>
+    </div>
+
+    <div id="quest-tracker">
+      <div class="q-head"><span class="q-diamond">◆</span> <span id="quest-title">Echoes of Astra</span></div>
+      <div id="quest-objective">Speak with Elder Elara in Aetheria.</div>
+      <div id="quest-distance" class="q-dist">—</div>
+    </div>
+
+    <div id="party-bar"></div>
+
+    <div id="ability-bar"></div>
+
+    <div id="boss-wrap" class="hidden">
+      <div class="boss-name-row"><span id="boss-title">THE VERDANT WARDEN</span><span id="boss-phase">PHASE I</span></div>
+      <div class="boss-bar-outer"><div id="boss-fill" class="boss-fill"></div><div class="boss-notches"></div></div>
+    </div>
+
+    <div id="interaction-prompt" class="hidden"><span class="key">F</span><span id="interaction-text">Interact</span></div>
+
+    <div id="region-banner" class="hidden">
+      <div class="region-line"></div>
+      <div id="region-banner-name">AETHERIA</div>
+      <div id="region-banner-sub">The Kingdom of Dawn</div>
+      <div class="region-line"></div>
+    </div>
+
+    <div id="boss-intro" class="hidden">
+      <div class="boss-intro-sub">ANCIENT GUARDIAN</div>
+      <div id="boss-intro-name">VERDANT WARDEN</div>
+      <div class="boss-intro-line"></div>
+    </div>
+
+    <div id="objective-toast" class="hidden"></div>
+    <div id="damage-layer"></div>
+    <div id="toast-stack"></div>
+    <div id="fps-counter" class="hidden">60 FPS</div>
+    <div id="reticle"></div>
+  </div>
+
+  <!-- ===================== MOBILE ===================== -->
+  <div id="mobile-controls" class="hidden">
+    <div id="joystick-zone"><div id="joystick-base"><div id="joystick-knob"></div></div></div>
+    <div class="m-buttons">
+      <button class="m-btn attack" data-action="attack">ATK</button>
+      <button class="m-btn heavy" data-action="heavy">HVY</button>
+      <button class="m-btn jump" data-action="jump">⤒</button>
+      <button class="m-btn dodge" data-action="dodge">↯</button>
+      <button class="m-btn block" data-action="block">◈</button>
+      <button class="m-btn ability" data-action="ability">E</button>
+      <button class="m-btn ultimate" data-action="ultimate">R</button>
+      <button class="m-btn switch" data-action="switch">⇄</button>
+    </div>
+    <button id="mobile-menu" class="m-btn menu" data-action="menu">☰</button>
+  </div>
+
+  <!-- ===================== TITLE ===================== -->
+  <div id="title-screen">
+    <div class="title-vignette"></div>
+    <div class="title-content">
+      <div class="astral-mark"><span></span><i></i><span></span></div>
+      <h1 class="game-title"><span class="astra">ASTRA</span><span class="rebirth">REBIRTH</span></h1>
+      <div class="title-sub">A WORLD FORGED IN STARLIGHT · AN OPEN-WORLD ACTION RPG</div>
+      <div class="title-menu">
+        <button id="btn-new-game" class="menu-btn primary"><span>NEW JOURNEY</span><small>Begin the rebirth</small></button>
+        <button id="btn-continue" class="menu-btn"><span>CONTINUE</span><small id="continue-label">No saved journey</small></button>
+        <button id="btn-how" class="menu-btn small"><span>HOW TO PLAY</span></button>
+        <button id="btn-credits" class="menu-btn small"><span>CREDITS</span></button>
+      </div>
+      <div class="title-footer"><span>WEBGL · THREE.JS</span><span class="dot">◆</span><span>v1.0 · THE REBIRTH PROTOCOL</span></div>
+    </div>
+  </div>
+
+  <!-- ===================== CHARACTER SELECT ===================== -->
+  <div id="char-select" class="hidden">
+    <div class="cs-head">
+      <div class="cs-kicker">CHOOSE YOUR VESSEL</div>
+      <h2>THREE SOULS. ONE DESTINY.</h2>
+      <p>The Astra shard chooses its bearer. Each soul wields a different path to the same rebirth.</p>
+    </div>
+    <div class="cs-cards">
+      <button class="cs-card" data-char="kael">
+        <div class="cs-card-bg kael"></div>
+        <div class="cs-elem fire">FIRE</div>
+        <div class="cs-name">KAEL</div>
+        <div class="cs-role">THE EMBERBLADE</div>
+        <div class="cs-desc">A wandering swordsman bound to a dying star. Heavy steel, blazing resolve.</div>
+        <div class="cs-stats"><div><span>POWER</span><i style="--v:92%"></i></div><div><span>SPEED</span><i style="--v:58%"></i></div><div><span>ARCANA</span><i style="--v:44%"></i></div></div>
+        <div class="cs-weapon">GREATSWORD · BURNING COMBO · METEOR ULTIMATE</div>
+        <div class="cs-pick">SELECT</div>
+      </button>
+      <button class="cs-card" data-char="yumi">
+        <div class="cs-card-bg yumi"></div>
+        <div class="cs-elem lightning">LIGHTNING</div>
+        <div class="cs-name">YUMI</div>
+        <div class="cs-role">THE STORM DANCER</div>
+        <div class="cs-desc">A shrine assassin who traded her name for speed. Twin blades, thunder footsteps.</div>
+        <div class="cs-stats"><div><span>POWER</span><i style="--v:62%"></i></div><div><span>SPEED</span><i style="--v:96%"></i></div><div><span>ARCANA</span><i style="--v:48%"></i></div></div>
+        <div class="cs-weapon">DUAL BLADES · RAPID CHAIN · STORM ULTIMATE</div>
+        <div class="cs-pick">SELECT</div>
+      </button>
+      <button class="cs-card" data-char="aria">
+        <div class="cs-card-bg aria"></div>
+        <div class="cs-elem ice">ICE</div>
+        <div class="cs-name">ARIA</div>
+        <div class="cs-role">THE FROSTWEAVER</div>
+        <div class="cs-desc">Last archmage of the fallen sky-temples. Distance is her armor, winter her blade.</div>
+        <div class="cs-stats"><div><span>POWER</span><i style="--v:50%"></i></div><div><span>SPEED</span><i style="--v:60%"></i></div><div><span>ARCANA</span><i style="--v:98%"></i></div></div>
+        <div class="cs-weapon">STARCALLER STAFF · FROST NOVA · ABSOLUTE ZERO</div>
+        <div class="cs-pick">SELECT</div>
+      </button>
+    </div>
+    <button id="cs-back" class="text-btn">‹ BACK</button>
+    <div class="cs-hint">You may switch vessels at any moment with <b>1</b> <b>2</b> <b>3</b>.</div>
+  </div>
+
+  <!-- ===================== PAUSE / CODEX ===================== -->
+  <div id="pause-menu" class="hidden">
+    <div class="pause-shell">
+      <aside class="pause-side">
+        <div class="pause-brand"><span>ASTRA</span><small>REBIRTH</small></div>
+        <nav id="pause-nav">
+          <button data-tab="inventory" class="active"><span class="ico">▣</span> Inventory</button>
+          <button data-tab="equipment"><span class="ico">⚔</span> Equipment</button>
+          <button data-tab="skills"><span class="ico">✦</span> Skill Tree</button>
+          <button data-tab="quests"><span class="ico">◆</span> Quest Journal</button>
+          <button data-tab="map"><span class="ico">◎</span> World Map</button>
+          <button data-tab="settings"><span class="ico">⚙</span> Settings</button>
+        </nav>
+        <div class="pause-side-footer">
+          <button id="btn-save" class="text-btn">Save Journey</button>
+          <button id="btn-title" class="text-btn danger">Return to Title</button>
+        </div>
+      </aside>
+      <section class="pause-main">
+        <header class="pause-head">
+          <div><h2 id="pause-title">INVENTORY</h2><p id="pause-subtitle">Relics, tonics and materials gathered across the realm.</p></div>
+          <div class="pause-meta"><span id="pause-level">LV. 1</span><span id="pause-gold">◈ 0</span></div>
+        </header>
+        <div id="pause-content"></div>
+      </section>
+      <button id="pause-close" class="close-btn">✕</button>
+    </div>
+  </div>
+
+  <!-- ===================== DIALOGUE ===================== -->
+  <div id="dialogue" class="hidden">
+    <div class="dlg-portrait"><div id="dlg-glyph">E</div><div class="dlg-portrait-ring"></div></div>
+    <div class="dlg-body">
+      <div class="dlg-name-row"><span id="dlg-name">ELDER ELARA</span><span id="dlg-role">KEEPER OF AETHERIA</span></div>
+      <div id="dlg-text"></div>
+      <div id="dlg-options"></div>
+    </div>
+    <div class="dlg-hint">F / CLICK to continue</div>
+  </div>
+
+  <!-- ===================== SHOP ===================== -->
+  <div id="shop-panel" class="hidden">
+    <div class="shop-shell">
+      <header><h2 id="shop-title">WAYFARER'S GOODS</h2><span id="shop-gold">◈ 0</span><button id="shop-close" class="close-btn">✕</button></header>
+      <div id="shop-items"></div>
+    </div>
+  </div>
+
+  <!-- ===================== MODALS ===================== -->
+  <div id="modal" class="hidden">
+    <div class="modal-card">
+      <div id="modal-kicker">CODEX</div>
+      <h2 id="modal-title">HOW TO PLAY</h2>
+      <div id="modal-body"></div>
+      <button id="modal-close" class="menu-btn small"><span>CLOSE</span></button>
+    </div>
+  </div>
+
+  <div id="class-card" class="hidden">
+    <div class="cc-sub">NEW VESSEL UNLOCKED</div>
+    <div id="cc-name">ARIA</div>
+    <div id="cc-role">THE FROSTWEAVER</div>
+  </div>
+
+  <div id="ending-screen" class="hidden">
+    <div class="ending-inner">
+      <div class="ending-kicker">THE REBIRTH IS COMPLETE</div>
+      <h1>ASTRA <span>REBORN</span></h1>
+      <p id="ending-text">The shard's light returns to the world — and the world remembers your name.</p>
+      <div class="ending-stats" id="ending-stats"></div>
+      <button id="ending-continue" class="menu-btn primary"><span>CONTINUE EXPLORING</span></button>
+    </div>
+  </div>
+
+  <div id="death-screen" class="hidden">
+    <div class="death-inner">
+      <div class="death-kicker">THE STAR FADES</div>
+      <h1>YOU HAVE FALLEN</h1>
+      <p>The shard still burns within you. Rise, bearer.</p>
+      <div class="death-actions">
+        <button id="btn-respawn" class="menu-btn primary"><span>RISE AGAIN</span><small>Return to the last waypoint</small></button>
+        <button id="btn-death-title" class="menu-btn small"><span>RETURN TO TITLE</span></button>
+      </div>
+    </div>
+  </div>
+
+  <div id="victory-screen" class="hidden">
+    <div class="victory-inner">
+      <div class="victory-kicker">GUARDIAN VANQUISHED</div>
+      <h1 id="victory-name">VERDANT WARDEN</h1>
+      <div class="victory-rewards" id="victory-rewards"></div>
+      <button id="victory-continue" class="menu-btn primary"><span>CLAIM VICTORY</span></button>
+    </div>
+  </div>
+
+  <div id="loading">
+    <div class="load-mark"><span></span><i></i><span></span></div>
+    <div class="load-title">ASTRA</div>
+    <div class="load-bar"><i id="load-fill"></i></div>
+    <div class="load-text" id="load-text">FORGING THE WORLD...</div>
+  </div>
+</div>
+
+<script type="module" src="./src/game.js"></script>
+</body>
+</html>
