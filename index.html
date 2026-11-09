@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+  <meta name="theme-color" content="#101619" />
+  <title>ASHEN OATH — The Last Ember</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <main id="game-shell">
+    <canvas id="game" aria-label="Ashen Oath game world"></canvas>
+    <div class="vignette"></div>
+    <header class="topbar">
+      <div class="brand"><span class="brand-mark">✦</span><div><strong>ASHEN OATH</strong><small>THE LAST EMBER</small></div></div>
+      <div class="chapter"><span>CHAPTER I</span><b>THE HOLLOW SANCTUM</b></div>
+      <button id="pause-button" class="icon-button" aria-label="Pause game">Ⅱ</button>
+    </header>
+    <section class="hud" aria-label="Game status">
+      <div class="hero-card"><div class="portrait">ᚱ</div><div class="vitals"><div class="hero-name">THE WAYFARER <span>LV. 01</span></div><div class="bar-label"><span>VIGOR</span><span id="health-text">100 / 100</span></div><div class="bar"><i id="health-fill"></i></div><div class="bar-label ember-label"><span>EMBER</span><span id="mana-text">3 / 3</span></div><div class="bar ember"><i id="mana-fill"></i></div></div></div>
+      <div class="objective"><span class="eyebrow">YOUR OATH</span><strong id="objective-title">Awaken the three wardstones</strong><div id="objective-copy">The old god stirs beneath the ash.</div><div class="seal-row" id="seal-row"><i></i><i></i><i></i><span>0 / 3</span></div></div>
+      <div class="boss-card" id="boss-card"><div class="boss-heading"><span>THE ASHEN WARDEN</span><span id="boss-phase">DORMANT</span></div><div class="bar boss-bar"><i id="boss-fill"></i></div><div class="boss-subtitle">An oath without a keeper.</div></div>
+    </section>
+    <div class="prompt" id="prompt"></div>
+    <div class="toast" id="toast" aria-live="polite"></div>
+    <div class="controls-hint"><span>WASD</span> MOVE <i>·</i> <span>SPACE</span> STRIKE <i>·</i> <span>SHIFT</span> DODGE <i>·</i> <span>Q</span> EMBER <i>·</i> <span>E</span> ATTUNE</div>
+    <div class="touch-controls" aria-label="Touch controls">
+      <div class="dpad"><button data-key="w" aria-label="Move up">▲</button><div><button data-key="a" aria-label="Move left">◀</button><button data-key="s" aria-label="Move down">▼</button><button data-key="d" aria-label="Move right">▶</button></div></div>
+      <div class="touch-actions"><button data-action="dodge">DODGE</button><button data-action="attack" class="attack-touch">STRIKE</button><button data-action="magic">EMBER</button><button data-action="interact">ATTUNE</button></div>
+    </div>
+    <section class="overlay" id="title-screen">
+      <div class="title-content"><div class="ornament">✦　ᚱ　✦</div><p class="eyebrow">A MYTH OF FIRE & FORGOTTEN KINGS</p><h1>ASHEN<br/><em>OATH</em></h1><p class="subtitle">The old gods do not forgive.<br/>They only wait.</p><button class="primary-button" id="start-button">ENTER THE SANCTUM <span>→</span></button><div class="title-foot">A SHORT ACTION ADVENTURE · 8–12 MIN</div></div>
+      <div class="story-note"><span>01 — THE LAST EMBER</span><p>When the sun went dark, the wardstones fell silent. You carry the final spark of the first flame. Wake the stones. Face what waits below.</p></div>
+    </section>
+    <section class="overlay hidden" id="pause-screen"><div class="modal-card"><p class="eyebrow">THE WORLD HOLDS ITS BREATH</p><h2>PAUSED</h2><p>Take a moment. The Warden will wait.</p><button class="primary-button" id="resume-button">RETURN TO THE SANCTUM</button><div class="modal-tip">WASD to move · Space to strike · Shift to evade · Q to cast</div></div></section>
+    <section class="overlay hidden" id="end-screen"><div class="modal-card"><p class="eyebrow" id="end-eyebrow">THE OATH REMAINS</p><h2 id="end-title">THE EMBER ENDURES</h2><p id="end-copy"></p><button class="primary-button" id="restart-button">PLAY AGAIN <span>↻</span></button></div></section>
+    <div class="screen-flash" id="screen-flash"></div>
+  </main>
+  <script src="game.js"></script>
+</body>
+</html>
